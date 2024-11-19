@@ -5,7 +5,11 @@ from middlewares.database.db import database
 message_router = Router(name='message_router')
 
 @message_router.message()
-async def stats(message: types.Message):
+async def handle_message(message: types.Message):
+    if message.text and message.text.startswith("/"):
+        if any(message.text.startswith(cmd) for cmd in ["/start", "/help", "/s"]):
+            return
+    
     if message.from_user.is_bot:
         return
     
@@ -26,4 +30,4 @@ async def stats(message: types.Message):
             timestamp=str(message.date)
         )
     )
-    await message.reply("Hi")
+    await message.reply("I acknowledged your message")

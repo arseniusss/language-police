@@ -6,7 +6,6 @@ import sys
 
 
 async def main():
-    
     await database.setup()
     dp.update.middleware.register(database)
     await dp.start_polling(bot)
