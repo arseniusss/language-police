@@ -7,8 +7,7 @@ message_router = Router(name='message_router')
 @message_router.message()
 async def handle_message(message: types.Message):
     if message.text and message.text.startswith("/"):
-        if any(message.text.startswith(cmd) for cmd in ["/start", "/help", "/s"]):
-            return
+        return
     
     if message.from_user.is_bot:
         return

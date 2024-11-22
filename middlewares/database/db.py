@@ -4,14 +4,14 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from .models import User, ChatMessage
 from aiogram import BaseMiddleware
 import os
-from dotenv import load_dotenv
+from settings import get_settings
 
-load_dotenv()
+settings = get_settings()
 
 class DatabaseMiddleware(BaseMiddleware):
     def __init__(self):
-        mongodb_uri = os.getenv("MONGODB_CONNECTION_URI")
-        mongodb_db = os.getenv("MONGODB_DATABASE")
+        mongodb_uri = settings.MONGODB_CONNECTION_URI
+        mongodb_db = settings.MONGODB_DATABASE
         
         if not mongodb_uri or not mongodb_db:
             raise ValueError("Missing required environment variables: MONGODB_CONNECTION_URI or MONGODB_DATABASE")

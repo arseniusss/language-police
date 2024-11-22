@@ -11,8 +11,8 @@ class ChatMessage(BaseModel):
 class User(Document):
     user_id: int
     name: Optional[str] = None
-    username: Optional[str] = None  # Made optional with default None
-    is_active: bool = True  # Added with default True
+    username: Optional[str] = None
+    is_active: bool = True
     chat_history: List[ChatMessage] = []
 
     class Settings:
