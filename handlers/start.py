@@ -2,6 +2,7 @@ from aiogram import types, Router
 from aiogram.filters.command import Command
 from middlewares.database.db import database
 
+
 start_router = Router(name='start_router')
 
 @start_router.message(Command("start"))

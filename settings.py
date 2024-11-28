@@ -1,6 +1,4 @@
-# settings.py
 from pydantic_settings import BaseSettings
-from typing import Optional
 from functools import lru_cache
 
 class Settings(BaseSettings):
@@ -18,6 +16,16 @@ class Settings(BaseSettings):
     # Server settings
     APP_HOST: str = "0.0.0.0"
     APP_PORT: int = 8000
+    
+    BACKEND_URL: str  = "http://localhost:8001"
+    # Redis settings
+    REDIS_URL: str = "redis://localhost:6379/0"
+    REDIS_QUEUE_KEY: str = "language_analysis_queue"
+
+    CELERY_BROKER_URL: str = "redis://localhost:6379/0"
+    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
+    CELERY_AUTOSCALE_MIN: int = 2
+    CELERY_AUTOSCALE_MAX: int = 8
     
     # Logging
     LOG_LEVEL: str = "INFO"

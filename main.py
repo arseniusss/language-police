@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from aiogram.types import Update
 import uvicorn
@@ -12,7 +13,26 @@ settings = get_settings()
 WEBHOOK_URL = settings.WEBHOOK_URL
 WEBHOOK_PATH = settings.WEBHOOK_PATH
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logging.info("Starting up...")
+    await database.setup()
+    dp.update.middleware.register(database)
+    
+    webhook_info = await bot.get_webhook_info()
+    if webhook_info.url != WEBHOOK_URL:
+        logging.info(f"Setting webhook to {WEBHOOK_URL}")
+        await bot.set_webhook(WEBHOOK_URL + WEBHOOK_PATH)
+    
+    yield
+    
+    # Shutdown
+    logging.info("Shutting down...")
+    await bot.delete_webhook()
+    await bot.session.close()
+
+app = FastAPI(lifespan=lifespan)
 
 @app.post(WEBHOOK_PATH)
 async def handle_webhook(request: Request):
@@ -20,24 +40,6 @@ async def handle_webhook(request: Request):
     update = Update(**data)
     await dp.feed_webhook_update(bot=bot, update=update)
     return {"status": "ok"}
-
-@app.on_event("startup")
-async def on_startup():
-    logging.info("Starting up...")
-    await database.setup()
-
-    dp.update.middleware.register(database)
-
-    webhook_info = await bot.get_webhook_info()
-    if webhook_info.url != WEBHOOK_URL:
-        logging.info(f"Setting webhook to {WEBHOOK_URL}")
-        await bot.set_webhook(WEBHOOK_URL + WEBHOOK_PATH)
-
-@app.on_event("shutdown")
-async def on_shutdown():
-    logging.info("Shutting down...")
-    await bot.delete_webhook()
-    await bot.session.close()
 
 if __name__ == "__main__":
     logging.basicConfig(
@@ -48,7 +50,7 @@ if __name__ == "__main__":
     
     uvicorn.run(
         app, 
-        host="0.0.0.0", 
-        port=8000, 
+        host=settings.APP_HOST,
+        port=settings.APP_PORT,
         log_level="info"
     )

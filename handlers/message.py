@@ -1,7 +1,10 @@
 from aiogram import types, Router
 from middlewares.database.models import ChatMessage
-from middlewares.database.db import database 
+from middlewares.database.db import database
+import httpx
+from settings import get_settings
 
+settings = get_settings()
 message_router = Router(name='message_router')
 
 @message_router.message()
@@ -11,7 +14,7 @@ async def handle_message(message: types.Message):
     
     if message.from_user.is_bot:
         return
-    
+
     if not await database.user_exists(message.from_user.id):
         await database.create_user({
             "user_id": message.from_user.id,
@@ -29,4 +32,16 @@ async def handle_message(message: types.Message):
             timestamp=str(message.date)
         )
     )
-    await message.reply("I acknowledged your message")
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"{settings.BACKEND_URL}/analyze_message",
+            json={
+                "text": message.text,
+                "chat_id": str(message.chat.id),
+                "message_id": str(message.message_id),
+                "user_id": message.from_user.id
+            }
+        )
+        job_data = response.json()
+        await message.reply(f"Processing your message. Job ID: {job_data['job_id']}")

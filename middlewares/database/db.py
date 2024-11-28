@@ -3,7 +3,6 @@ from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
 from .models import User, ChatMessage
 from aiogram import BaseMiddleware
-import os
 from settings import get_settings
 
 settings = get_settings()
@@ -51,7 +50,10 @@ class DatabaseMiddleware(BaseMiddleware):
         """Add a chat message to a user's chat history."""
         user = await self.get_user(user_id)
         if user:
-            user.chat_history.append(message)
+            if message.chat_id not in user.chat_history:
+                user.chat_history[message.chat_id] = []
+            
+            user.chat_history[message.chat_id].append(message)
             await user.save()
             return user
         return None
