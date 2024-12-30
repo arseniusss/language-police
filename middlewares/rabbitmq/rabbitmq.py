@@ -24,7 +24,6 @@ class RabbitMQMiddleware:
             self.channel.queue_declare(queue=settings.RABBITMQ_RESULT_QUEUE, durable=True)
 
     def store_result(self, queue: str, job_id: str, result: dict):
-        self.connect()
         logger.info(f"Storing result for job_id {job_id} in queue {queue}")
         self.channel.basic_publish(
             exchange='',
@@ -34,7 +33,6 @@ class RabbitMQMiddleware:
         )
 
     def get_result(self, queue: str, job_id: str):
-        self.connect()
         method_frame, header_frame, body = self.channel.basic_get(queue=queue)
         if method_frame:
             self.channel.basic_ack(method_frame.delivery_tag)

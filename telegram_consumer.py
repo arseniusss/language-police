@@ -8,6 +8,7 @@ from middlewares.rabbitmq.rabbitmq import QueueMessageType
 settings = get_settings()
 logger = logging.getLogger(__name__)
 
+# TODO: нехай спочатку відсилається повідомлення, що запит поставлено в чергу, а потім воно реадагується
 async def consume_telegram_queue_messages(bot: Bot):
     connection = await aio_pika.connect_robust(settings.RABBITMQ_URL)
     channel = await connection.channel()
