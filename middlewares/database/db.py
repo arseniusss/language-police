@@ -1,7 +1,7 @@
 from typing import Optional, Dict, List
 from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
-from .models import User, ChatMessage
+from .models import User, ChatMessage, Chat, ChatSettings
 from aiogram import BaseMiddleware
 from settings import get_settings
 
@@ -20,8 +20,8 @@ class DatabaseMiddleware(BaseMiddleware):
         super().__init__()
 
     async def setup(self):
-        """Initialize Beanie with the User model."""
-        await init_beanie(database=self.db, document_models=[User])
+        """Initialize Beanie with the User and Chat models."""
+        await init_beanie(database=self.db, document_models=[User, Chat])
 
     async def get_user(self, user_id: int) -> Optional[User]:
         """Fetch a user by user_id."""
@@ -63,6 +63,37 @@ class DatabaseMiddleware(BaseMiddleware):
         user = await self.get_user(user_id)
         if user:
             await user.delete()
+            return True
+        return False
+
+    async def get_chat(self, chat_id: int) -> Optional[Chat]:
+        """Fetch a chat by chat_id."""
+        return await Chat.find_one(Chat.chat_id == chat_id)
+
+    async def chat_exists(self, chat_id: int) -> bool:
+        """Check if chat exists in database"""
+        chat = await self.get_chat(chat_id)
+        return chat is not None
+
+    async def create_chat(self, chat_data: Dict) -> Chat:
+        """Create a new chat."""
+        chat = Chat(**chat_data)
+        await chat.insert()
+        return chat
+
+    async def update_chat(self, chat_id: int, update_data: Dict) -> Optional[Chat]:
+        """Update chat data."""
+        chat = await self.get_chat(chat_id)
+        if chat:
+            await chat.set(update_data)
+            return chat
+        return None
+
+    async def delete_chat(self, chat_id: int) -> bool:
+        """Delete a chat."""
+        chat = await self.get_chat(chat_id)
+        if chat:
+            await chat.delete()
             return True
         return False
 

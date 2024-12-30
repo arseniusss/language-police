@@ -18,12 +18,17 @@ class Settings(BaseSettings):
     APP_PORT: int = 8000
     
     BACKEND_URL: str  = "http://localhost:8001"
-    # Redis settings
-    REDIS_URL: str = "redis://localhost:6379/0"
-    REDIS_QUEUE_KEY: str = "language_analysis_queue"
+    
+    # RabbitMQ settings
+    RABBITMQ_URL: str = "amqp://guest:guest@localhost:5672/"
+    RABBITMQ_GENERAL_QUEUE: str = "general_queue"
+    RABBITMQ_WORKER_QUEUE: str = "worker_queue"
+    RABBITMQ_TELEGRAM_QUEUE: str = "telegram_queue"
+    RABBITMQ_RESULT_QUEUE: str = "result_queue"
 
-    CELERY_BROKER_URL: str = "redis://localhost:6379/0"
-    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
+    # Celery settings
+    CELERY_BROKER_URL: str
+    CELERY_RESULT_BACKEND: str
     CELERY_AUTOSCALE_MIN: int = 2
     CELERY_AUTOSCALE_MAX: int = 8
     
