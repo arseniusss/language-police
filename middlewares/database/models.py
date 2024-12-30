@@ -27,7 +27,7 @@ class Restriction(BaseModel):
     valid_until: Optional[datetime] = None
 
 class User(Document):
-    user_id: int
+    user_id: int = Field(..., alias="user_id")
     name: Optional[str] = None
     username: Optional[str] = None
     is_active: bool = True

@@ -4,9 +4,11 @@ from aiogram.types import Update
 import uvicorn
 import logging
 import sys
+import asyncio
 from bot import dp, bot
 from middlewares.database.db import database
 from settings import get_settings
+from telegram_consumer import consume_telegram_queue_messages
 
 settings = get_settings()
 
@@ -24,6 +26,8 @@ async def lifespan(app: FastAPI):
     if webhook_info.url != WEBHOOK_URL:
         logging.info(f"Setting webhook to {WEBHOOK_URL}")
         await bot.set_webhook(WEBHOOK_URL + WEBHOOK_PATH)
+    
+    asyncio.create_task(consume_telegram_queue_messages(bot))
     
     yield
     

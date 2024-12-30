@@ -3,7 +3,6 @@ from middlewares.database.models import ChatMessage
 from middlewares.rabbitmq.rabbitmq import rabbitmq_manager, QueueMessageType
 from settings import get_settings
 import logging
-import aiogram
 import uuid
 
 settings = get_settings()
