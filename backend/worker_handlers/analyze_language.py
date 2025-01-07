@@ -2,7 +2,8 @@ from langdetect import detect_langs
 from backend.worker_handlers.celery_config import celery_app
 import logging
 from settings import get_settings
-from middlewares.rabbitmq.rabbitmq import rabbitmq_manager, QueueMessageType
+from middlewares.rabbitmq.queue_manager import rabbitmq_manager
+from middlewares.rabbitmq.mq_enums import WorkerResQueueMessageType
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -16,7 +17,7 @@ def analyze_language(text: str, chat_id: str, message_id: str, user_id: int, tim
         logger.info(f"Detected languages for message_id {message_id}: {analysis_result}")
         
         result_data = {
-            "message_type": QueueMessageType.TEXT_ANALYSIS_COMPLETED,
+            "message_type": WorkerResQueueMessageType.TEXT_ANALYSIS_COMPLETED,
             "text": text,
             "message_id": message_id,
             "chat_id": chat_id,

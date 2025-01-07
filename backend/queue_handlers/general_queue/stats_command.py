@@ -1,7 +1,8 @@
 import logging
 from langdetect import detect
 from middlewares.database.db import database
-from middlewares.rabbitmq.rabbitmq import rabbitmq_manager, QueueMessageType
+from middlewares.rabbitmq.queue_manager import rabbitmq_manager
+from middlewares.rabbitmq.mq_enums import TelegramQueueMessageType
 from settings import get_settings
 
 settings = get_settings()
@@ -38,7 +39,7 @@ async def handle_stats_command(message_data: dict):
             response_text = "No messages could be analyzed!"
 
     response_data = {
-        "message_type": QueueMessageType.STATS_COMMAND_TG,
+        "message_type": TelegramQueueMessageType.STATS_COMMAND_ANSWER,
         "chat_id": chat_id,
         "user_id": user_id,
         "text": response_text,

@@ -2,7 +2,8 @@ import json
 import logging
 from aio_pika import IncomingMessage
 from settings import get_settings
-from middlewares.rabbitmq.rabbitmq import rabbitmq_manager, QueueMessageType
+from middlewares.rabbitmq.queue_manager import rabbitmq_manager
+from middlewares.rabbitmq.mq_enums import WorkerResQueueMessageType
 from backend.queue_handlers.worker_results_queue.text_analysis_complete import handle_text_analysis_compete
 
 settings = get_settings()
@@ -14,7 +15,7 @@ async def handle_worker_result_queue_message(message: IncomingMessage):
         logger.info(f"Received result: {message_data}")
         message_type = message_data.get("message_type", "Unknown")
         
-        if message_type == QueueMessageType.TEXT_ANALYSIS_COMPLETED:
+        if message_type == WorkerResQueueMessageType.TEXT_ANALYSIS_COMPLETED:
             logger.info("Handling TEXT_ANALYSIS_COMPLETED result")
             await handle_text_analysis_compete(message_data)
         else:

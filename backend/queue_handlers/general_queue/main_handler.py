@@ -2,7 +2,8 @@ import json
 import logging
 from aio_pika import IncomingMessage
 from settings import get_settings
-from middlewares.rabbitmq.rabbitmq import rabbitmq_manager, QueueMessageType
+from middlewares.rabbitmq.queue_manager import rabbitmq_manager
+from middlewares.rabbitmq.mq_enums import GeneralBackendQueueMessageType
 from backend.queue_handlers.general_queue.analyze_text import handle_text_to_analyze
 from backend.queue_handlers.general_queue.stats_command import handle_stats_command
 
@@ -15,10 +16,10 @@ async def handle_general_queue_message(message: IncomingMessage):
         logger.info(f"Received message: {message_data}")
         message_type = message_data.get("message_type", "Unknown")
         
-        if message_type == QueueMessageType.TEXT_TO_ANALYZE:
+        if message_type == GeneralBackendQueueMessageType.TEXT_TO_ANALYZE:
             logger.info("Handling TEXT_TO_ANALYZE message")
             await handle_text_to_analyze(message_data)
-        elif message_type == QueueMessageType.STATS_COMMAND_TG:
+        elif message_type == GeneralBackendQueueMessageType.STATS_COMMAND_TG:
             logger.info("Handling STATS_COMMAND_TG message")
             await handle_stats_command(message_data)
         else:

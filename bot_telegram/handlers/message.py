@@ -31,7 +31,7 @@ async def handle_message(message: types.Message):
     }
 
     guid = str(uuid.uuid4())
-    await rabbitmq_manager.store_result(settings.RABBITMQ_GENERAL_QUEUE, guid, message_data)
+    await rabbitmq_manager.store_result_sync(settings.RABBITMQ_GENERAL_QUEUE, guid, message_data)
     try:
         await message.reply("Message received!")
     except Exception as e:

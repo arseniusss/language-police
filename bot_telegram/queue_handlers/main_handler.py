@@ -3,7 +3,8 @@ import logging
 from aiogram import Bot
 from aio_pika import IncomingMessage
 from settings import get_settings
-from middlewares.rabbitmq.rabbitmq import rabbitmq_manager, TelegramQueueMessageType
+from middlewares.rabbitmq.queue_manager import rabbitmq_manager
+from middlewares.rabbitmq.mq_enums import TelegramQueueMessageType
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -14,7 +15,7 @@ async def handle_queue_message(bot: Bot, message: IncomingMessage):
         logger.info(f"Received message: {message_data}")
         message_type = message_data.get("message_type", "Unknown")
         
-        if message_type == TelegramQueueMessageType.STATS_COMMAND_TG:
+        if message_type == TelegramQueueMessageType.STATS_COMMAND_ANSWER:
             logger.info("Handling STATS_COMMAND_TG message")
             chat_id = message_data.get("chat_id", "")
             text = message_data.get("text", "")

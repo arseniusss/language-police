@@ -57,14 +57,4 @@ class RabbitMQMiddleware:
                         return message_data["result"]
         return None
 
-class QueueMessageType(str, Enum):
-    TEXT_TO_ANALYZE = "text_to_analyze"
-    TEXT_ANALYSIS_COMPLETED = "text_analysis_completed"
-    STATS_COMMAND_TG = "stats_command_tg"
-
-class TelegramQueueMessageType(str, Enum):
-    TEXT_TO_ANALYZE = "text_to_analyze"
-    TEXT_ANALYSIS_COMPLETED = "text_analysis_completed"
-    STATS_COMMAND_TG = "stats_command_tg"
-
 rabbitmq_manager = RabbitMQMiddleware()
