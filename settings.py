@@ -38,7 +38,8 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
-
+        
+#TODO: пофіксити, щоб не треба було викликати import settings; settings = get_settings() в кожному файлі
 @lru_cache()
 def get_settings() -> Settings:
     return Settings()

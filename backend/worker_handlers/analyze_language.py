@@ -1,7 +1,7 @@
-from langdetect import detect_langs
-from backend.worker_handlers.celery_config import celery_app
 import logging
+from langdetect import detect_langs
 from settings import get_settings
+from backend.worker_handlers.celery_config import celery_app
 from middlewares.rabbitmq.queue_manager import rabbitmq_manager
 from middlewares.rabbitmq.mq_enums import WorkerResQueueMessageType
 

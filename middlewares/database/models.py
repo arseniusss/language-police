@@ -21,10 +21,9 @@ class RestrictionType(str, Enum):
 
 class Restriction(BaseModel):
     restriction_type: RestrictionType
-    restriction_message: Optional[str] = None
+    restriction_justification_message: Optional[str] = None
     granted_date: Optional[datetime] = None
-    duration_seconds: Optional[int] = None
-    valid_until: Optional[datetime] = None
+    duration_seconds: Optional[float] = None
 
 class User(Document):
     user_id: int = Field(..., alias="user_id")
@@ -33,8 +32,8 @@ class User(Document):
     is_active: bool = True
     chat_history: Dict[str, List[ChatMessage]] = {}
     # we store it in a dict to easily check for specific chat's restrictions on chat join for example
-    #FIXME: щось не те зі словником 
-    # restrictions: Optional[Dict[int, List[Restriction]]] = Field(default_factory=dict)
+    # FIXME: щось не те зі словником 
+    # restrictions: Optional[Dict[str, List[Restriction]]] = Field(default_factory=dict)
 
     class Settings:
         name = "users"
@@ -43,16 +42,16 @@ class User(Document):
 #automatic behaviour for rule breaking
 class RuleBreakingBehaviour(BaseModel):
     notify_privately: bool = False
-    # <language, min confidence>
-    language_codes_with_min_confidence: Optional[List[Tuple[str, int]]] = None
+    language_codes_with_min_confidence: Optional[List[Tuple[str, float]]] = None
     restriction: Restriction = Restriction(
         restriction_type=RestrictionType.WARNING,
         restriction_message="You broke the rules!"
     )
-
     # TODO: продумати, як краще зберігати обмеження, бо можуть бути і за тривалістю
     # можливо, створити окрему категорію обмежень для цього
-    prev_restrictions_threshhold: Optional[int] = None #i.e 3 warnings
+
+    #i.e 3 warnings
+    prev_restrictions_threshhold: Optional[int] = None 
     prev_restrictions_type: Optional[RestrictionType] = RestrictionType.WARNING
 
 class ChatSettings(BaseModel):
@@ -66,19 +65,17 @@ class ChatSettings(BaseModel):
     # TODO: constraints
     new_members_analyzed_messages: int = 10
     chat_for_logs: Optional[int] = None
-    screen_applications: bool = False
+    screen_group_applications: bool = False
     min_message_length_for_analysis: int = 10
 
 class Chat(Document):
     chat_id: int
-    last_known_title: str
+    last_known_name: str
     users: List[int] = []
-    blocked_users: List[int] = [] #ids only 
+    blocked_users: List[int] = [] # ids only 
     admins: Dict[int, List[str]] = {} # admins and their permissions in this chat
-    
+    chat_settings: ChatSettings
 
     class Settings:
         name = "chats"
         indexes = ["chat_id"]
-
-#TODO: tickets system

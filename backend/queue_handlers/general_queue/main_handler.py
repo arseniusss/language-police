@@ -16,14 +16,15 @@ async def handle_general_queue_message(message: IncomingMessage):
         logger.info(f"Received message: {message_data}")
         message_type = message_data.get("message_type", "Unknown")
         
-        if message_type == GeneralBackendQueueMessageType.TEXT_TO_ANALYZE:
-            logger.info("Handling TEXT_TO_ANALYZE message")
-            await handle_text_to_analyze(message_data)
-        elif message_type == GeneralBackendQueueMessageType.STATS_COMMAND_TG:
-            logger.info("Handling STATS_COMMAND_TG message")
-            await handle_stats_command(message_data)
-        else:
-            logger.warning(f"Unhandled message type: {message_type}")
+        match message_type:
+            case GeneralBackendQueueMessageType.TEXT_TO_ANALYZE:
+                logger.info("Handling TEXT_TO_ANALYZE message")
+                await handle_text_to_analyze(message_data)
+            case GeneralBackendQueueMessageType.STATS_COMMAND_TG:
+                logger.info("Handling STATS_COMMAND_TG message")
+                await handle_stats_command(message_data)
+            case _:
+                logger.warning(f"Unhandled message type: {message_type}")
 
 async def consume_general_queue_messages():
     await rabbitmq_manager.connect()
