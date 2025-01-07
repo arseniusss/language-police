@@ -2,7 +2,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from handlers import main_router
+from .command_routers import main_router
 from settings import get_settings
 
 

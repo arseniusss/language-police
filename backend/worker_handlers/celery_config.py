@@ -4,10 +4,10 @@ from settings import get_settings
 settings = get_settings()
 
 celery_app = Celery(
-    "backend",
+    "backend.worker_handlers",
     broker=settings.CELERY_BROKER_URL,
     backend=settings.CELERY_RESULT_BACKEND,
-    include=['backend.analyze_language']
+    include=['backend.worker_handlers.analyze_language']
 )
 
 celery_app.conf.update(
@@ -20,7 +20,7 @@ celery_app.conf.update(
     enable_utc=True,
     worker_prefetch_multiplier=1,
     task_routes={
-        'backend.analyze_language.analyze_language': {
+        'backend.worker_handlers_analyze_language.analyze_language': {
             'queue': settings.RABBITMQ_WORKER_QUEUE
         }
     }

@@ -5,10 +5,10 @@ import uvicorn
 import logging
 import sys
 import asyncio
-from bot import dp, bot
+from .bot import dp, bot
 from middlewares.database.db import database
 from settings import get_settings
-from telegram_consumer import consume_telegram_queue_messages
+from bot_telegram.queue_handlers.main_handler import consume_telegram_queue_messages
 
 settings = get_settings()
 

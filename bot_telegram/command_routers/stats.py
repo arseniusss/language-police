@@ -21,6 +21,6 @@ async def analyze_messages(message: types.Message):
     }
 
     guid = str(uuid.uuid4())
-    rabbitmq_manager.store_result(settings.RABBITMQ_GENERAL_QUEUE, guid, message_data)
+    await rabbitmq_manager.store_result(settings.RABBITMQ_GENERAL_QUEUE, guid, message_data)
 
     await message.reply("Your stats request is being processed!")
