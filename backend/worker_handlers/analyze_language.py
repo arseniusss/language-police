@@ -9,7 +9,7 @@ settings = get_settings()
 logger = logging.getLogger(__name__)
 
 @celery_app.task(name='backend.worker_handlers.analyze_language.analyze_language')
-def analyze_language(text: str, chat_id: str, message_id: str, user_id: int, timestamp: str):
+def analyze_language(text: str, chat_id: str, message_id: str, user_id: int, timestamp: str, name: str, username: str):
     logger.info(f"Analyzing language for message_id: {message_id}, chat_id: {chat_id}, user_id: {user_id}")
     try:
         result = detect_langs(text)
@@ -23,7 +23,9 @@ def analyze_language(text: str, chat_id: str, message_id: str, user_id: int, tim
             "chat_id": chat_id,
             "user_id": user_id,
             "timestamp": timestamp,
-            "analysis_result": analysis_result
+            "analysis_result": analysis_result,
+            "name": name,
+            "username": username
         }
         
         rabbitmq_manager.store_result_sync(settings.RABBITMQ_RESULT_QUEUE, chat_id + message_id, result_data)

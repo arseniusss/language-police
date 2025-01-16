@@ -74,7 +74,8 @@ class Chat(Document):
     users: List[int] = []
     blocked_users: List[int] = [] # ids only 
     admins: Dict[int, List[str]] = {} # admins and their permissions in this chat
-    chat_settings: ChatSettings
+    # FIXME:
+    # chat_settings: ChatSettings
 
     class Settings:
         name = "chats"

@@ -97,6 +97,24 @@ class DatabaseMiddleware(BaseMiddleware):
             return True
         return False
 
+    async def add_user_to_chat(self, chat_id: int, user_id: int):
+        chat = await self.get_chat(chat_id)
+        if chat and user_id not in chat.users:
+            chat.users.append(user_id)
+            await chat.save()
+        return chat
+
+    async def remove_user_from_chat(self, chat_id: int, user_id: int):
+        chat = await self.get_chat(chat_id)
+        if chat and user_id in chat.users:
+            chat.users.remove(user_id)
+            await chat.save()
+        return chat
+
+    async def is_user_in_chat(self, chat_id: int, user_id: int) -> bool:
+        chat = await self.get_chat(chat_id)
+        return chat and user_id in chat.users
+
     async def __call__(self, handler, event, data):
         data["db"] = self
         return await handler(event, data)
