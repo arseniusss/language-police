@@ -8,6 +8,8 @@ from backend.queue_handlers.general_queue.analyze_text import handle_text_to_ana
 from backend.queue_handlers.general_queue.stats_command import handle_stats_command
 from backend.queue_handlers.general_queue.my_chat_stats_command import handle_my_chat_stats_command
 from backend.queue_handlers.general_queue.my_global_stats_command import handle_my_global_stats_command
+from backend.queue_handlers.general_queue.chat_top_command import handle_chat_top_command
+from backend.queue_handlers.general_queue.global_top_command import handle_global_top_command
 
 
 settings = get_settings()
@@ -34,6 +36,12 @@ async def handle_general_queue_message(message: IncomingMessage):
             case GeneralBackendQueueMessageType.MY_GLOBAL_STATS_COMMAND_TG:
                 logger.info("Handling MY_GLOBAL_STATS_COMMAND_TG message")
                 await handle_my_global_stats_command(message_data)
+            case GeneralBackendQueueMessageType.CHAT_TOP_COMMAND_TG:
+                logger.info("Handling CHAT_TOP_COMMAND_TG message")
+                await handle_chat_top_command(message_data)
+            case GeneralBackendQueueMessageType.GLOBAL_TOP_COMMAND_TG:
+                logger.info("Handling GLOBAL_TOP_COMMAND_TG message")
+                await handle_global_top_command(message_data)
             case _:
                 logger.warning(f"Unhandled message type: {message_type}")
 

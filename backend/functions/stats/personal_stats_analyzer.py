@@ -2,10 +2,9 @@ from typing import List, Dict, Any
 from collections import defaultdict
 from middlewares.database.models import ChatMessage
 
-# my_chat_stats
-# my_global_stats
+# my_chat_stats AND my_global_stats
 class PersonalStatsAnalyzer:
-    def __init__(self, chat_history: Dict[str, List[ChatMessage]]):
+    def __init__(self, chat_history: Dict[str, Dict[str, List[ChatMessage]]]):
         self.chat_history = chat_history
 
     def total_chats_count(self) -> int:

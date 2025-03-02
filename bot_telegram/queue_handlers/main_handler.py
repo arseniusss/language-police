@@ -32,6 +32,19 @@ async def handle_queue_message(bot: Bot, message: IncomingMessage):
             chat_id = message_data.get("chat_id", "")
             stats = message_data.get("stats", "")
             await bot.send_message(chat_id, f"Your global stats: {stats}")
+            
+        elif message_type == TelegramQueueMessageType.CHAT_TOP_COMMAND_ANSWER:
+            logger.info("Handling CHAT_TOP_COMMAND_ANSWER message")
+            chat_id = message_data.get("chat_id", "")
+            top_stats = message_data.get("top_stats", "")
+            await bot.send_message(chat_id, top_stats)
+            
+        elif message_type == TelegramQueueMessageType.GLOBAL_TOP_COMMAND_ANSWER:
+            logger.info("Handling GLOBAL_TOP_COMMAND_ANSWER message")
+            chat_id = message_data.get("chat_id", "")
+            top_stats = message_data.get("top_stats", "")
+            await bot.send_message(chat_id, top_stats)
+            
         else:
             logger.warning(f"Unhandled message type: {message_type}")
 

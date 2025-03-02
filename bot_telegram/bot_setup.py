@@ -5,7 +5,6 @@ from aiogram.enums import ParseMode
 from .command_routers import main_router
 from settings import get_settings
 
-
 settings = get_settings()
 
 bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
