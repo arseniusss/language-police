@@ -43,7 +43,13 @@ class RabbitMQMiddleware:
 
     #FIXME: This is a workaround to use async code in sync code
     def store_result_sync(self, queue: str, job_id: str, result: dict):
-        asyncio.run(self.store_result(queue, job_id, result))
+        """Store result in queue synchronously using the current event loop"""
+        logger.info(f"Storing result for job_id {job_id} in queue {queue} (sync)")
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            return loop.create_task(self.store_result(queue, job_id, result))
+        else:
+            return asyncio.run(self.store_result(queue, job_id, result))
     
     async def get_result(self, queue: str, job_id: str):
         if self.channel is None or self.channel.is_closed:

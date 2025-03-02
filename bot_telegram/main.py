@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
-from aiogram.types import Update
+from aiogram.types import Update, BotCommand
 import uvicorn
 import logging
 import sys
@@ -15,6 +15,20 @@ settings = get_settings()
 WEBHOOK_URL = settings.WEBHOOK_URL
 WEBHOOK_PATH = settings.WEBHOOK_PATH
 
+async def set_bot_commands():
+    commands = [
+        BotCommand(command="start", description="Start the bot"),
+        BotCommand(command="help", description="Get help"),
+        BotCommand(command="stats", description="Get language analysis stats"),
+        BotCommand(command="my_chat_stats", description="Get your chat stats"),
+        BotCommand(command="my_global_stats", description="Get your global stats"),
+        BotCommand(command="chat_top", description="Get top statistics for the chat"),
+        BotCommand(command="global_top", description="Get top statistics globally"),
+        BotCommand(command="my_chat_ranking", description="Get your ranking in chat statistics"),
+        BotCommand(command="my_global_ranking", description="Get your ranking in global statistics"),
+    ]
+    await bot.set_my_commands(commands)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
@@ -28,6 +42,7 @@ async def lifespan(app: FastAPI):
         await bot.set_webhook(WEBHOOK_URL + WEBHOOK_PATH)
     
     asyncio.create_task(consume_telegram_queue_messages(bot))
+    await set_bot_commands()
     
     yield
     

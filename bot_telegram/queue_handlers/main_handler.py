@@ -64,6 +64,9 @@ async def consume_telegram_queue_messages(bot: Bot):
     await rabbitmq_manager.connect()
     
     async def on_message(message: IncomingMessage):
-        await handle_queue_message(bot, message)
+        try:
+            await handle_queue_message(bot, message)
+        except Exception as e:
+            logger.error(f"Error while handling queue message {message.body}: {e}")
     
     await rabbitmq_manager.telegram_queue.consume(on_message)

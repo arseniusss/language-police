@@ -1,10 +1,9 @@
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional, Tuple, Union
 from pydantic import BaseModel, Field, confloat
 from typing_extensions import Annotated
 from beanie import Document
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
-
 
 class ChatMessage(BaseModel):
     chat_id: str
@@ -17,13 +16,14 @@ class RestrictionType(str, Enum):
     WARNING = "warning"
     TIMEOUT = "timeout"
     TEMPORARY_BAN = "temporary_ban"
-    PERMAMENT_BAN = "permanent_ban"
+    PERMANENT_BAN = "permanent_ban"
 
 class Restriction(BaseModel):
     restriction_type: RestrictionType
     restriction_justification_message: Optional[str] = None
     granted_date: Optional[datetime] = None
     duration_seconds: Optional[float] = None
+    expires_at: Optional[datetime] = None
 
 class User(Document):
     user_id: int = Field(..., alias="user_id")
@@ -33,40 +33,57 @@ class User(Document):
     chat_history: Dict[str, List[ChatMessage]] = {}
     # we store it in a dict to easily check for specific chat's restrictions on chat join for example
     # FIXME: щось не те зі словником 
-    # restrictions: Optional[Dict[str, List[Restriction]]] = Field(default_factory=dict)
+    restrictions: Optional[Dict[str, List[Restriction]]] = Field(default_factory=dict)
 
     class Settings:
         name = "users"
         indexes = ["user_id"]
 
+class RuleConditionType(str, Enum):
+    SINGLE_MESSAGE_CONFIDENCE_NOT_IN_ALLOWED_LANGUAGES = "single_message_confidence_not_in_allowed_languages"
+    SINGLE_MESSAGE_LANGUAGE_CONFIDENCE = "single_message_language_confidence"
+    TOTAL_MESSAGES_LANGUAGE_CONFIDENCE = "total_messages_language_confidence"
+    TWO_LANGUAGES_MESSAGE_LENGTH_RATIO = "two_languages_message_length_ratio"
+    PREVIOUS_RESTRICTION_TYPE_TIME_LENGTH = "previous_restriction_type_time_length"
+    PREVIOUS_RESTRICTION_TYPE_COUNT = "previous_restriction_type_count"
+
+# TODO: ЯК ЗАДАТИ КОНКРЕТНІ ПОЛЯ ЗАМІСТЬ ПРОСТО СЛОВНИКА (VALUES)
+class RuleCondition(BaseModel):
+    type: RuleConditionType
+    values: Optional[Dict] = None
+    this_chat_only: bool = True
+    time_window: Optional[timedelta] = None
+    extra_data: Optional[Dict] = None
+
+class ConditionRelationType(str, Enum):
+    AND = "and"
+    OR = "or"
+    XOR = "xor"
+
 #automatic behaviour for rule breaking
-class RuleBreakingBehaviour(BaseModel):
-    notify_privately: bool = False
-    language_codes_with_min_confidence: Optional[List[Tuple[str, float]]] = None
+class ModerationRule(BaseModel):
+    conditions: List[RuleCondition]
+    condition_relation : ConditionRelationType = ConditionRelationType.AND
+
     restriction: Restriction = Restriction(
         restriction_type=RestrictionType.WARNING,
-        restriction_message="You broke the rules!"
+        restriction_justification_message="You broke the rules!"
     )
-    # TODO: продумати, як краще зберігати обмеження, бо можуть бути і за тривалістю
-    # можливо, створити окрему категорію обмежень для цього
-
-    #i.e 3 warnings
-    prev_restrictions_threshhold: Optional[int] = None 
-    prev_restrictions_type: Optional[RestrictionType] = RestrictionType.WARNING
+    message: str
+    notify_user: bool = True
 
 class ChatSettings(BaseModel):
-    sync_blocklist_with: List[int] = []
+    sync_blocklist_with: Optional[List[int]] = []
     sync_settings_with: Optional[int] = None
 
-    rule_breaking_behaviour: List[RuleBreakingBehaviour] = []
-    possible_languages: Optional[List[str]] = ["ua", "en"]
-    # FIXME:
-    analysis_frequency: Annotated[float, Field(strict=True,ge=0, le=1)]
-    # TODO: constraints
-    new_members_analyzed_messages: int = 10
+    moderation_rules: List[ModerationRule] = []
+    allowed_languages: Optional[List[str]] = ["ua", "en"]
+    analysis_frequency: Annotated[float, Field(strict=True,ge=0.05, le=1)] = 0.05
+    new_members_min_analyzed_messages: int = 5
     chat_for_logs: Optional[int] = None
-    screen_group_applications: bool = False
+    # screen_group_applications: bool = False
     min_message_length_for_analysis: int = 10
+    max_message_length_for_analysis: int = 2000
 
 class Chat(Document):
     chat_id: int
@@ -74,8 +91,7 @@ class Chat(Document):
     users: List[int] = []
     blocked_users: List[int] = [] # ids only 
     admins: Dict[int, List[str]] = {} # admins and their permissions in this chat
-    # FIXME:
-    # chat_settings: ChatSettings
+    chat_settings: ChatSettings = ChatSettings()
 
     class Settings:
         name = "chats"
