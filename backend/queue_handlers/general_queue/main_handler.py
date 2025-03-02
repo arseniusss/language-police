@@ -10,6 +10,8 @@ from backend.queue_handlers.general_queue.my_chat_stats_command import handle_my
 from backend.queue_handlers.general_queue.my_global_stats_command import handle_my_global_stats_command
 from backend.queue_handlers.general_queue.chat_top_command import handle_chat_top_command
 from backend.queue_handlers.general_queue.global_top_command import handle_global_top_command
+from backend.queue_handlers.general_queue.my_chat_ranking_command import handle_my_chat_ranking_command
+from backend.queue_handlers.general_queue.my_global_ranking_command import handle_my_global_ranking_command
 
 
 settings = get_settings()
@@ -24,9 +26,7 @@ async def handle_general_queue_message(message: IncomingMessage):
         match message_type:
             case GeneralBackendQueueMessageType.TEXT_TO_ANALYZE:
                 logger.info("Handling TEXT_TO_ANALYZE message")
-                #TODO: ось тут розпарсити message_data і викликати функцію з необхідними параметрами
                 await handle_text_to_analyze(message_data)
-            # TODO: теж у workers
             case GeneralBackendQueueMessageType.STATS_COMMAND_TG:
                 logger.info("Handling STATS_COMMAND_TG message")
                 await handle_stats_command(message_data)
@@ -42,6 +42,12 @@ async def handle_general_queue_message(message: IncomingMessage):
             case GeneralBackendQueueMessageType.GLOBAL_TOP_COMMAND_TG:
                 logger.info("Handling GLOBAL_TOP_COMMAND_TG message")
                 await handle_global_top_command(message_data)
+            case GeneralBackendQueueMessageType.MY_CHAT_RANKING_COMMAND_TG:
+                logger.info("Handling MY_CHAT_RANKING_COMMAND_TG message")
+                await handle_my_chat_ranking_command(message_data)
+            case GeneralBackendQueueMessageType.MY_GLOBAL_RANKING_COMMAND_TG:
+                logger.info("Handling MY_GLOBAL_RANKING_COMMAND_TG message")
+                await handle_my_global_ranking_command(message_data)
             case _:
                 logger.warning(f"Unhandled message type: {message_type}")
 

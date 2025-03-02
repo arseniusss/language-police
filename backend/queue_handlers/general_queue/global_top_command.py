@@ -54,36 +54,36 @@ def format_top_report(top_data):
     # Most messages
     report += "👑 Most Messages:\n"
     for i, (user_id, name, count) in enumerate(top_data["most_messages"], 1):
-        report += f"{i}. {name}: {count} messages\n"
+        report += f"{i}. <a href='tg://user?id={user_id}'>{name}</a>: {count} messages\n"
     report += "\n"
     
     # Most message length
     report += "📏 Most Total Message Length:\n"
     for i, (user_id, name, length) in enumerate(top_data["most_message_length"], 1):
-        report += f"{i}. {name}: {length} characters\n"
+        report += f"{i}. <a href='tg://user?id={user_id}'>{name}</a>: {length} characters\n"
     report += "\n"
     
     # Most Ukrainian messages
     report += "🇺🇦 Most Ukrainian Messages:\n"
     for i, (user_id, name, count) in enumerate(top_data["most_ukrainian_messages"], 1):
-        report += f"{i}. {name}: {count} messages\n"
+        report += f"{i}. <a href='tg://user?id={user_id}'>{name}</a>: {count} messages\n"
     report += "\n"
     
     # Earliest messages
     report += "🕰️ Earliest Messages:\n"
     for i, (user_id, name, timestamp) in enumerate(top_data["earliest_message_users"], 1):
-        report += f"{i}. {name}: {timestamp}\n"
+        report += f"{i}. <a href='tg://user?id={user_id}'>{name}</a>: {timestamp}\n"
     report += "\n"
     
     # Latest messages
     report += "🆕 Latest Messages:\n"
     for i, (user_id, name, timestamp) in enumerate(top_data["latest_message_users"], 1):
-        report += f"{i}. {name}: {timestamp}\n"
+        report += f"{i}. <a href='tg://user?id={user_id}'>{name}</a>: {timestamp}\n"
     report += "\n"
     
     # Highest average message length
     report += "📊 Highest Average Message Length:\n"
     for i, (user_id, name, avg_length) in enumerate(top_data["highest_avg_message_length"], 1):
-        report += f"{i}. {name}: {avg_length:.2f} characters\n"
+        report += f"{i}. <a href='tg://user?id={user_id}'>{name}</a>: {avg_length:.2f} characters\n"
     
     return report
