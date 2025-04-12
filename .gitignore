@@ -1,4 +1,4 @@
 .env
 __pycache__
 startup.example
-settings.py
+/settings.py
