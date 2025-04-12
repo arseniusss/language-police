@@ -42,14 +42,26 @@ class RabbitMQMiddleware:
         await connection.close()
 
     #FIXME: This is a workaround to use async code in sync code
-    def store_result_sync(self, queue: str, job_id: str, result: dict):
-        """Store result in queue synchronously using the current event loop"""
-        logger.info(f"Storing result for job_id {job_id} in queue {queue} (sync)")
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            return loop.create_task(self.store_result(queue, job_id, result))
-        else:
-            return asyncio.run(self.store_result(queue, job_id, result))
+    def store_result_sync(self, queue_name, message_id, result_data):
+        """
+        Synchronous version of store_result for use in Celery tasks
+        """
+        if not self.connection or self.connection.is_closed:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(self.connect())
+            finally:
+                loop.close()
+        
+        # Create a new event loop for this operation
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
+        try:
+            return loop.run_until_complete(self._store_result(queue_name, message_id, result_data))
+        finally:
+            loop.close()
     
     async def get_result(self, queue: str, job_id: str):
         if self.channel is None or self.channel.is_closed:

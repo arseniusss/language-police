@@ -6,9 +6,10 @@ from middlewares.database.models import ChatMessage, ModerationRule, Restriction
 from middlewares.rabbitmq.queue_manager import rabbitmq_manager
 from middlewares.rabbitmq.mq_enums import TelegramQueueMessageType
 from settings import get_settings
+from backend.utils.logging_config import logger
 
 settings = get_settings()
-logger = logging.getLogger(__name__)
+logger = logger.getChild('text_analysis_complete')
 
 async def handle_text_analysis_compete(message_data: dict[str, Any]):
     logger.info(f"Handling TEXT_ANALYSIS_COMPLETED queue message:\n{message_data}")
@@ -70,12 +71,7 @@ async def check_moderation_rules(user_id: int, chat_id: str, message_id: str, te
         if await rule_conditions_met(rule, user, chat_id, text, analysis_result):
             logger.info(f"Rule {rule_index + 1} triggered for user {user_id} in chat {chat_id}")
             
-            # Apply the restriction
             await apply_restriction(rule, user_id, chat_id, message_id, text, user_name, rule_index)
-            
-            # We've applied one rule, so we stop checking further rules
-            # If you want to apply all matching rules, remove this break
-            break
 
 async def rule_conditions_met(rule: ModerationRule, user: Any, chat_id: str, text: str, analysis_result: List) -> bool:
     """Check if all conditions for a rule are met"""

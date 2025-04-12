@@ -7,9 +7,10 @@ from aio_pika import IncomingMessage
 from settings import get_settings
 from middlewares.rabbitmq.queue_manager import rabbitmq_manager
 from middlewares.rabbitmq.mq_enums import TelegramQueueMessageType
+from bot_telegram.utils.logging_config import logger
 
 settings = get_settings()
-logger = logging.getLogger(__name__)
+logger = logger.getChild('main_handler')
 
 async def handle_queue_message(bot: Bot, message: IncomingMessage):
     async with message.process():
@@ -134,16 +135,6 @@ async def handle_queue_message(bot: Bot, message: IncomingMessage):
                     await bot.ban_chat_member(
                         chat_id=chat_id,
                         user_id=user_id
-                    )
-                    
-                elif action_type == "delete_message":
-                    # Delete the message
-                    message_id = message_data.get("message_id", "")
-                    logger.info(f"Deleting message {message_id} from user {user_id} in chat {chat_id}")
-                    
-                    await bot.delete_message(
-                        chat_id=chat_id,
-                        message_id=message_id
                     )
                     
             except Exception as e:
