@@ -26,6 +26,8 @@ async def set_bot_commands():
         BotCommand(command="global_top", description="Get top statistics globally"),
         BotCommand(command="my_chat_ranking", description="Get your ranking in chat statistics"),
         BotCommand(command="my_global_ranking", description="Get your ranking in global statistics"),
+        BotCommand(command="chat_settings", description="Configure chat settings (admin only)"),
+        BotCommand(command="add_admins", description="Sync chat administrators with bot"),
     ]
     await bot.set_my_commands(commands)
 
@@ -39,7 +41,8 @@ async def lifespan(app: FastAPI):
     webhook_info = await bot.get_webhook_info()
     if webhook_info.url != WEBHOOK_URL:
         logging.info(f"Setting webhook to {WEBHOOK_URL}")
-        await bot.set_webhook(WEBHOOK_URL + WEBHOOK_PATH)
+        await bot.set_webhook(url = WEBHOOK_URL + WEBHOOK_PATH,
+                              allowed_updates=["message", "callback_query", "poll", "chat_member", "chat_join_request"])
     
     asyncio.create_task(consume_telegram_queue_messages(bot))
     await set_bot_commands()

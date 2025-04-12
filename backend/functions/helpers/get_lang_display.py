@@ -1,4 +1,4 @@
-# ...existing code...
+# FIXME: maybe hardcoding inst great
 LANGUAGES = {
     "af": ("🇿🇦", "Afrikaans"),
     "ar": ("🇸🇦", "Arabic"),

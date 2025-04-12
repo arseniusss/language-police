@@ -18,6 +18,9 @@ class TelegramQueueMessageType(str, Enum):
     GLOBAL_TOP_COMMAND_ANSWER = "global_top_command_tg"
     MY_CHAT_RANKING_COMMAND_ANSWER = "my_chat_ranking_command_tg"
     MY_GLOBAL_RANKING_COMMAND_ANSWER = "my_global_ranking_command_tg"
+    ADMIN_NOTIFICATION = "admin_notification"
+    USER_NOTIFICATION = "user_notification"
+    MODERATION_ACTION = "moderation_action"
 
 class WorkerResQueueMessageType(str, Enum):
     TEXT_ANALYSIS_COMPLETED = "text_analysis_completed"

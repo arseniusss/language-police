@@ -18,6 +18,17 @@ class RestrictionType(str, Enum):
     TEMPORARY_BAN = "temporary_ban"
     PERMANENT_BAN = "permanent_ban"
 
+class RestrictionRecord(BaseModel):
+    """Record of a restriction applied to a user"""
+    user_id: int
+    chat_id: str
+    message_id: str
+    message_text: str
+    restriction_type: str
+    rule_index: int
+    timestamp: str
+    duration_seconds: Optional[float] = None
+
 class Restriction(BaseModel):
     restriction_type: RestrictionType
     restriction_justification_message: Optional[str] = None
@@ -32,8 +43,8 @@ class User(Document):
     is_active: bool = True
     chat_history: Dict[str, List[ChatMessage]] = {}
     # we store it in a dict to easily check for specific chat's restrictions on chat join for example
-    # FIXME: щось не те зі словником 
     restrictions: Optional[Dict[str, List[Restriction]]] = Field(default_factory=dict)
+    restriction_history: List[RestrictionRecord] = Field(default_factory=list)
 
     class Settings:
         name = "users"
@@ -42,8 +53,6 @@ class User(Document):
 class RuleConditionType(str, Enum):
     SINGLE_MESSAGE_CONFIDENCE_NOT_IN_ALLOWED_LANGUAGES = "single_message_confidence_not_in_allowed_languages"
     SINGLE_MESSAGE_LANGUAGE_CONFIDENCE = "single_message_language_confidence"
-    TOTAL_MESSAGES_LANGUAGE_CONFIDENCE = "total_messages_language_confidence"
-    TWO_LANGUAGES_MESSAGE_LENGTH_RATIO = "two_languages_message_length_ratio"
     PREVIOUS_RESTRICTION_TYPE_TIME_LENGTH = "previous_restriction_type_time_length"
     PREVIOUS_RESTRICTION_TYPE_COUNT = "previous_restriction_type_count"
 
@@ -58,7 +67,7 @@ class RuleCondition(BaseModel):
 class ConditionRelationType(str, Enum):
     AND = "and"
     OR = "or"
-    XOR = "xor"
+    # XOR = "xor"
 
 #automatic behaviour for rule breaking
 class ModerationRule(BaseModel):
@@ -70,6 +79,7 @@ class ModerationRule(BaseModel):
         restriction_justification_message="You broke the rules!"
     )
     message: str
+    name: str
     notify_user: bool = True
 
 class ChatSettings(BaseModel):
