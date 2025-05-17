@@ -39,7 +39,8 @@ class PersonalStatsAnalyzer:
             for msg in messages:
                 if msg.analysis_result:
                     lang_with_prob = msg.analysis_result[0]
-                    lang_count[lang_with_prob["lang"]] += 1
+                    if lang_with_prob["prob"] > 0.5:
+                        lang_count[lang_with_prob["lang"]] += 1
         
         return lang_count
 

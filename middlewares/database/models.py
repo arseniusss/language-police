@@ -67,7 +67,6 @@ class RuleCondition(BaseModel):
 class ConditionRelationType(str, Enum):
     AND = "and"
     OR = "or"
-    # XOR = "xor"
 
 #automatic behaviour for rule breaking
 class ModerationRule(BaseModel):

@@ -9,58 +9,69 @@ class SpecificUserRankingGenerator:
         self.users = users
         self.target_user_id = target_user_id
         
-        self.target_user = None
-        for user in self.users:
-            if user.user_id == target_user_id:
-                self.target_user = user
-                break
-    
-    def _generate_full_rankings(self):
-        """Generate all rankings for all categories without limiting to top N"""
-        raise NotImplementedError("Subclasses must implement this method")
-    
-    def _find_user_ranking(self, ranking_list, user_id):
-        """Find the ranking of the user in a ranking list"""
-        for i, (uid, _, _) in enumerate(ranking_list):
-            if uid == user_id:
-                return i + 1, ranking_list[i]  # 1-based position
-        return None, None
-    
-    def get_user_rankings(self) -> Dict[str, Tuple[int, Any]]:
-        """Get the user's ranking in all categories
+    def get_user_rankings(self, language: str = None) -> Dict[str, Tuple[int, Any]]:
+        """Get the user's position in various rankings
         
-        Returns:
-            Dict mapping category names to tuples of (position, value)
+        Returns a dictionary with keys being the ranking type and values being tuples of
+        (position, value) where position is the 1-based position of the user in the ranking
         """
-        if not self.target_user:
-            return {
-                "most_messages": (0, 0),
-                "most_message_length": (0, 0),
-                "most_ukrainian_messages": (0, 0),
-                "earliest_message": (0, ""),
-                "latest_message": (0, ""),
-                "avg_message_length": (0, 0.0)
-            }
+        # Generate full ranking data (no limit)
+        full_rankings = self._generate_full_rankings(language)
         
-        rankings = self._generate_full_rankings()
+        # Find target user's position in each ranking
+        result = {}
         
-        positions = {}
+        # Most messages
+        result["most_messages"] = self._find_position_in_ranking(
+            full_rankings["most_messages"], 
+            lambda x: x[0] == self.target_user_id
+        )
         
-        # Find position in each category
-        for category, ranking_list in rankings.items():
-            position, data = self._find_user_ranking(ranking_list, self.target_user_id)
-            if position and data:
-                positions[category] = (position, data[2])  # position and value
-            else:
-                # Default values if user not found in ranking
-                if category in ["earliest_message", "latest_message"]:
-                    positions[category] = (0, "")
-                elif category == "avg_message_length":
-                    positions[category] = (0, 0.0)
-                else:
-                    positions[category] = (0, 0)
+        # Most message length
+        result["most_message_length"] = self._find_position_in_ranking(
+            full_rankings["most_message_length"], 
+            lambda x: x[0] == self.target_user_id
+        )
         
-        return positions
+        # If no language filter, include Ukrainian messages ranking
+        if not language:
+            # Most Ukrainian messages
+            result["most_ukrainian_messages"] = self._find_position_in_ranking(
+                full_rankings["most_ukrainian_messages"], 
+                lambda x: x[0] == self.target_user_id
+            )
+        
+        # Earliest message
+        result["earliest_message"] = self._find_position_in_ranking(
+            full_rankings["earliest_message"], 
+            lambda x: x[0] == self.target_user_id
+        )
+        
+        # Latest message
+        result["latest_message"] = self._find_position_in_ranking(
+            full_rankings["latest_message"], 
+            lambda x: x[0] == self.target_user_id
+        )
+        
+        # Avg message length
+        result["avg_message_length"] = self._find_position_in_ranking(
+            full_rankings["avg_message_length"], 
+            lambda x: x[0] == self.target_user_id
+        )
+        
+        return result
+    
+    def _find_position_in_ranking(self, ranking: List[Any], condition_func) -> Tuple[int, Any]:
+        """Find the position of the user in a ranking and return the position and value"""
+        for i, item in enumerate(ranking):
+            if condition_func(item):
+                return (i + 1, item[2])  # 1-based position, value is at index 2
+        
+        return (0, None)  # Not found
+        
+    def _generate_full_rankings(self, language: str = None) -> Dict[str, List[Tuple]]:
+        """Generate full rankings (no limit)"""
+        raise NotImplementedError("Subclasses must implement this method")
 
 
 class SpecificUserChatRankingGenerator(SpecificUserRankingGenerator):
@@ -71,16 +82,22 @@ class SpecificUserChatRankingGenerator(SpecificUserRankingGenerator):
         self.chat_id = chat_id
         self.top_generator = ChatTopGenerator(users, chat_id)
     
-    def _generate_full_rankings(self):
+    def _generate_full_rankings(self, language: str = None) -> Dict[str, List[Tuple]]:
         """Generate full rankings for the chat (no limit)"""
-        return {
-            "most_messages": self.top_generator._get_most_messages(limit=len(self.users)),
-            "most_message_length": self.top_generator._get_most_message_length(limit=len(self.users)),
-            "most_ukrainian_messages": self.top_generator._get_most_ukrainian_messages(limit=len(self.users)),
-            "earliest_message": self.top_generator._get_earliest_message_users(limit=len(self.users)),
-            "latest_message": self.top_generator._get_latest_message_users(limit=len(self.users)),
-            "avg_message_length": self.top_generator._get_avg_message_length(limit=len(self.users))
+        languages = [language] if language else None
+        
+        rankings = {
+            "most_messages": self.top_generator._get_most_messages(limit=len(self.users), languages=languages),
+            "most_message_length": self.top_generator._get_most_message_length(limit=len(self.users), languages=languages),
+            "earliest_message": self.top_generator._get_earliest_message_users(limit=len(self.users), languages=languages),
+            "latest_message": self.top_generator._get_latest_message_users(limit=len(self.users), languages=languages),
+            "avg_message_length": self.top_generator._get_avg_message_length(limit=len(self.users), languages=languages)
         }
+        
+        if not language:
+            rankings["most_ukrainian_messages"] = self.top_generator._get_most_ukrainian_messages(limit=len(self.users))
+            
+        return rankings
 
 
 class SpecificUserGlobalRankingGenerator(SpecificUserRankingGenerator):
@@ -90,13 +107,19 @@ class SpecificUserGlobalRankingGenerator(SpecificUserRankingGenerator):
         super().__init__(users, target_user_id)
         self.top_generator = GlobalTopGenerator(users)
     
-    def _generate_full_rankings(self):
+    def _generate_full_rankings(self, language: str = None) -> Dict[str, List[Tuple]]:
         """Generate full rankings globally (no limit)"""
-        return {
-            "most_messages": self.top_generator._get_most_messages(limit=len(self.users)),
-            "most_message_length": self.top_generator._get_most_message_length(limit=len(self.users)),
-            "most_ukrainian_messages": self.top_generator._get_most_ukrainian_messages(limit=len(self.users)),
-            "earliest_message": self.top_generator._get_earliest_message_users(limit=len(self.users)),
-            "latest_message": self.top_generator._get_latest_message_users(limit=len(self.users)),
-            "avg_message_length": self.top_generator._get_avg_message_length(limit=len(self.users))
+        languages = [language] if language else None
+        
+        rankings = {
+            "most_messages": self.top_generator._get_most_messages(limit=len(self.users), languages=languages),
+            "most_message_length": self.top_generator._get_most_message_length(limit=len(self.users), languages=languages),
+            "earliest_message": self.top_generator._get_earliest_message_users(limit=len(self.users), languages=languages),
+            "latest_message": self.top_generator._get_latest_message_users(limit=len(self.users), languages=languages),
+            "avg_message_length": self.top_generator._get_avg_message_length(limit=len(self.users), languages=languages)
         }
+        
+        if not language:
+            rankings["most_ukrainian_messages"] = self.top_generator._get_most_ukrainian_messages(limit=len(self.users))
+            
+        return rankings

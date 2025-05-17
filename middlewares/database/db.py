@@ -6,6 +6,9 @@ from .models import User, ChatMessage, Chat, ChatSettings, RestrictionType, Mode
 from aiogram import BaseMiddleware
 from settings import get_settings
 
+from bot_telegram.utils.logging_config import logger
+logger = logger.getChild("database_middleware")
+
 settings = get_settings()
 
 class DatabaseMiddleware(BaseMiddleware):
@@ -86,9 +89,46 @@ class DatabaseMiddleware(BaseMiddleware):
         """Update chat data."""
         chat = await self.get_chat(chat_id)
         if chat:
+            # Beanie's set method directly updates the document fields
             await chat.set(update_data)
+            # No need to call save() separately if using set() on a retrieved document,
+            # as Beanie's .set() followed by an operation that saves (like another .save() or if it's part of a larger transaction)
+            # or if the document is saved later. However, explicit save is clearer.
+            await chat.save() # Explicitly save changes
             return chat
         return None
+
+    async def migrate_user_chat_histories(self, source_chat_id: int, target_chat_id: int) -> int:
+        """
+        Migrates chat history for all users from a source chat ID to a target chat ID.
+        Updates the chat_id key in the chat_history dictionary and the chat_id attribute
+        within each ChatMessage object.
+        Returns the number of users whose histories were updated.
+        """
+        source_chat_id_str = str(source_chat_id)
+        target_chat_id_str = str(target_chat_id)
+        updated_users_count = 0
+
+        # Find users with history for the source chat
+        # Correct way to query for the existence of a key in a dictionary field
+        users_to_update = await User.find(
+            {f"chat_history.{source_chat_id_str}": {"$exists": True}}
+        ).to_list()
+
+        for user_doc in users_to_update:
+            if source_chat_id_str in user_doc.chat_history:
+                messages_to_migrate = user_doc.chat_history.pop(source_chat_id_str)
+                migrated_messages_list = []
+                for chat_msg_obj in messages_to_migrate:
+                    chat_msg_obj.chat_id = target_chat_id_str  # Update chat_id within ChatMessage
+                    migrated_messages_list.append(chat_msg_obj)
+                
+                user_doc.chat_history[target_chat_id_str] = migrated_messages_list
+                await user_doc.save()  # Save the updated user document
+                updated_users_count += 1
+                logger.debug(f"Migrated chat history for user {user_doc.user_id} from chat {source_chat_id_str} to {target_chat_id_str}")
+        
+        return updated_users_count
 
     async def delete_chat(self, chat_id: int) -> bool:
         """Delete a chat."""

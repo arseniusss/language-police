@@ -19,13 +19,20 @@ async def add_admins_command(message: types.Message):
     if message.chat.type == "private":
         await message.reply("This command can only be used in a group chat.")
         return
-
-    # Send initial status message
-    status_msg = await message.reply("Fetching chat administrators from Telegram...")
     
     try:
-        # Get all chat administrators from Telegram
+        # First check if the user is a Telegram admin
         chat_admins = await message.bot.get_chat_administrators(message.chat.id)
+        admin_ids = [admin.user.id for admin in chat_admins]
+        
+        # If the user is not an admin in Telegram, deny access
+        if message.from_user.id not in admin_ids:
+            await message.reply("You need to be a chat administrator to use this command. Please, ask the chat owner to grant you admin rights.")
+            logger.warning(f"User {message.from_user.id} attempted to use add_admins without admin rights")
+            return
+            
+        # Send initial status message
+        status_msg = await message.reply("Fetching chat administrators from Telegram...")
         
         # Get or create chat in database
         chat = await database.get_chat(message.chat.id)
@@ -71,11 +78,10 @@ async def add_admins_command(message: types.Message):
         
         # Update or create the chat in database
         if chat.id:  # If the chat already exists in DB
-            await database.update_chat(chat.chat_id, {"admins": chat.admins})
+            await database.update_chat(message.chat.id, {"admins": chat.admins})
         else:
             await database.create_chat(chat)
         
-        # TODO: fix this by mentioning by id, not username
         # Prepare admin list for display
         admin_text = "\n".join([
             f"• {admin.user.full_name} (@{admin.user.username or 'No username'})"

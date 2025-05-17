@@ -59,7 +59,7 @@ class RabbitMQMiddleware:
         asyncio.set_event_loop(loop)
         
         try:
-            return loop.run_until_complete(self._store_result(queue_name, message_id, result_data))
+            return loop.run_until_complete(self.store_result(queue_name, message_id, result_data))
         finally:
             loop.close()
     

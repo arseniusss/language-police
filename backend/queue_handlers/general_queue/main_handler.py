@@ -12,7 +12,10 @@ from backend.queue_handlers.general_queue.chat_top_command import handle_chat_to
 from backend.queue_handlers.general_queue.global_top_command import handle_global_top_command
 from backend.queue_handlers.general_queue.my_chat_ranking_command import handle_my_chat_ranking_command
 from backend.queue_handlers.general_queue.my_global_ranking_command import handle_my_global_ranking_command
-
+from backend.queue_handlers.general_queue.chat_stats_command import handle_chat_stats_command
+from backend.queue_handlers.general_queue.global_stats_command import handle_global_stats_command
+from backend.queue_handlers.general_queue.chat_global_top_command import handle_chat_global_top_command
+from backend.queue_handlers.general_queue.global_chat_ranking_command import handle_global_chat_ranking_command
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -48,6 +51,16 @@ async def handle_general_queue_message(message: IncomingMessage):
             case GeneralBackendQueueMessageType.MY_GLOBAL_RANKING_COMMAND_TG:
                 logger.info("Handling MY_GLOBAL_RANKING_COMMAND_TG message")
                 await handle_my_global_ranking_command(message_data)
+            case GeneralBackendQueueMessageType.CHAT_STATS_COMMAND_TG:
+                logger.info("Handling CHAT_STATS_COMMAND_TG message")
+                await handle_chat_stats_command(message_data)
+            case GeneralBackendQueueMessageType.GLOBAL_STATS_COMMAND_TG:
+                logger.info("Handling GLOBAL_STATS_COMMAND_TG message")
+                await handle_global_stats_command(message_data)
+            case GeneralBackendQueueMessageType.CHAT_GLOBAL_TOP_COMMAND_TG:
+                await handle_chat_global_top_command(message_data)
+            case GeneralBackendQueueMessageType.GLOBAL_CHAT_RANKING_COMMAND_TG:
+                await handle_global_chat_ranking_command(message_data)
             case _:
                 logger.warning(f"Unhandled message type: {message_type}")
 
