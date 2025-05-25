@@ -96,14 +96,6 @@ def format_top_report(top_data):
         report += f"{i}. <a href='tg://user?id={user_id}'>{name}</a>: {length} characters\n"
     report += "\n"
     
-    # Only add Ukrainian messages section if no language filter
-    if not language_filter and "most_ukrainian_messages" in top_data:
-        # Most Ukrainian messages
-        report += "🇺🇦 Most Ukrainian Messages:\n"
-        for i, (user_id, name, count) in enumerate(top_data["most_ukrainian_messages"], 1):
-            report += f"{i}. <a href='tg://user?id={user_id}'>{name}</a>: {count} messages\n"
-        report += "\n"
-    
     # Earliest messages
     report += "🕰️ Earliest Messages:\n"
     for i, (user_id, name, timestamp) in enumerate(top_data["earliest_message_users"], 1):

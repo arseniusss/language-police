@@ -18,21 +18,20 @@ WEBHOOK_PATH = settings.WEBHOOK_PATH
 async def set_bot_commands():
     commands = [
         BotCommand(command="start", description="Start the bot"),
-        BotCommand(command="help", description="Get help"),
-        BotCommand(command="stats", description="Get language analysis stats"),
+        BotCommand(command="help", description="See the list of commands"),
         BotCommand(command="chat_stats", description="Get chat language analysis stats"),
-        BotCommand(command="global_stats", description="Get global language statistics"),
-        BotCommand(command="my_chat_stats", description="Get your chat stats"),
-        BotCommand(command="my_global_stats", description="Get your global stats"),
-        BotCommand(command="chat_top", description="Get top statistics for the chat"),
-        BotCommand(command="chat_global_top", description="Get top chats ranked by statistics"),
-        BotCommand(command="global_top", description="Get top statistics globally"),
-        BotCommand(command="my_chat_ranking", description="Get your ranking in chat statistics"),
+        BotCommand(command="global_stats", description="Get global language statistics of all chats"),
+        BotCommand(command="my_chat_stats", description="Get your contribution to the chat stats"),
+        BotCommand(command="my_global_stats", description="Get your contribution to the global stats"),
+        BotCommand(command="chat_global_top", description="Get top of all chats ranked by different metrics"),
+        BotCommand(command="chat_top", description="See the top of users in this chat"),
+        BotCommand(command="my_chat_ranking", description="Get your ranking in chat top statistics"),
+        BotCommand(command="global_top", description="Get top of all users in all chats"),
+        BotCommand(command="my_global_ranking", description="Get your ranking in global top"),
         BotCommand(command="global_chat_ranking", description="Get this chat's ranking among all chats"),
-        BotCommand(command="my_global_ranking", description="Get your ranking in global statistics"),
         BotCommand(command="chat_settings", description="Configure chat settings (admin only)"),
-        BotCommand(command="add_admins", description="Sync chat administrators with bot"),
-        BotCommand(command="my_data", description="Download all your data"),
+        BotCommand(command="add_admins", description="Sync chat administrators with bot (admin only)"),
+        BotCommand(command="my_data", description="Download all your data as a .json file"),
     ]
     await bot.set_my_commands(commands)
 

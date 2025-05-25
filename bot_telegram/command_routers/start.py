@@ -15,6 +15,6 @@ async def start_command(message: types.Message):
     
     if not await database.user_exists(message.from_user.id):
         await database.create_user(user_data)
-        await message.reply(f"Welcome, {user_data['name']}!")
+        await message.reply(f"Welcome, {user_data['name']}! You've been successfully registered in our system.")
     else:
-        await message.reply(f"Welcome back, {user_data['name']}!")
+        await message.reply(f"Welcome back, {user_data['name']}! You are already registered in our system. If you want information about specific commands, please type /help.")

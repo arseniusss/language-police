@@ -15,7 +15,6 @@ def run_async(async_func):
     @wraps(async_func)
     def wrapper(*args, **kwargs):
         try:
-            # Create a new event loop
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             result = loop.run_until_complete(async_func(*args, **kwargs))
@@ -26,20 +25,15 @@ def run_async(async_func):
             raise
     return wrapper
 
-# Patch the store_result_sync method to properly handle event loop
 def patched_store_result_sync(queue_name, job_id, result_data):
     """Safely run the async store_result in a sync context"""
     try:
-        # Create a new event loop for this operation
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         
-        # Define an async function to do the work
         async def _do_store():
-            # Ensure connection is established
             if not rabbitmq_manager.connection or rabbitmq_manager.connection.is_closed:
                 await rabbitmq_manager.connect()
-            # Store the result
             await rabbitmq_manager.store_result(queue_name, job_id, result_data)
         
         # Run the async function in the loop
@@ -70,7 +64,6 @@ def analyze_language(text: str, chat_id: str, message_id: str, user_id: int, tim
             "username": username
         }
         
-        # Use our patched version instead of the one in rabbitmq_manager
         try:
             patched_store_result_sync(settings.RABBITMQ_RESULT_QUEUE, chat_id + message_id, result_data)
             logger.info(f"Successfully sent analysis result for message_id {message_id}")

@@ -113,15 +113,7 @@ async def format_ranking_report(rankings, chat_id, language=None):
         report += f"👥 <b>Unique Users:</b> #{users_pos} with <b>{users_count}</b> users\n\n"
     else:
         report += "👥 <b>Unique Users:</b> No ranking\n\n"
-    
-    # Only show Ukrainian messages ranking when no language filter
-    if not language:
-        # Most Ukrainian messages
-        ua_pos, ua_count = rankings.get("most_ukrainian_messages", (0, 0))
-        if ua_pos > 0:
-            report += f"🇺🇦 <b>Ukrainian Messages:</b> #{ua_pos} with <b>{ua_count}</b> messages\n\n"
-        else:
-            report += "🇺🇦 <b>Ukrainian Messages:</b> No ranking\n\n"
+
     
     # Most languages
     langs_pos, langs_count = rankings.get("most_languages", (0, 0))

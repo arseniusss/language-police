@@ -5,4 +5,4 @@ help_router = Router(name='help_router')
 
 @help_router.message(Command("help"))
 async def start_command(message: types.Message):
-    await message.reply("Hello! I'm your bot. How can I help you today?")
+    await message.reply("Hello! Here are the commands you can use:\n")

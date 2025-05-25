@@ -108,15 +108,6 @@ async def format_top_report(top_data: Dict[str, Any]) -> str:
         report += f"{i}. {chat_name}: {user_count} users ({msg_count} messages)\n"
     report += "\n"
     
-    # Only add Ukrainian messages section if no language filter
-    if not language_filter and "most_ukrainian_messages" in top_data:
-        # Most Ukrainian messages
-        report += "🇺🇦 <b>Most Ukrainian Messages:</b>\n"
-        for i, (chat_id, count, users) in enumerate(top_data.get("most_ukrainian_messages", []), 1):
-            chat_name = chat_names.get(str(chat_id), f"Chat {chat_id}")
-            report += f"{i}. {chat_name}: {count} messages ({users} users)\n"
-        report += "\n"
-    
     # Most languages
     report += "🌐 <b>Most Languages Used:</b>\n"
     for i, (chat_id, lang_count, users) in enumerate(top_data.get("most_languages", []), 1):

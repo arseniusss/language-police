@@ -127,7 +127,7 @@ class ConditionInputHelper:
                     "count", 
                     "Enter the minimum number of previous restrictions to trigger the rule:", 
                     int, 
-                    min_value=1
+                    min_value=2
                 )
             ],
             description=("This condition checks if a user has received a specific number of "
@@ -171,7 +171,6 @@ class ConditionInputHelper:
             if field.name == field_name:
                 # Special handling for restriction_type field
                 if field_name == "restriction_type":
-                    # Process as a list or "any"
                     if value.strip().lower() == "any":
                         return ["any"]
                     
@@ -468,26 +467,20 @@ async def cb_allowed_languages(callback: types.CallbackQuery, state: FSMContext)
     
     builder = InlineKeyboardBuilder()
     
-    # Common languages with toggle buttons
-    common_languages = [
-        ("🇺🇦 Ukrainian (uk)", "uk"),
-        ("🇬🇧 English (en)", "en"),
-        ("🇷🇺 Russian (ru)", "ru"),
-        ("🇵🇱 Polish (pl)", "pl"),
-        ("🇩🇪 German (de)", "de"),
-        ("🇫🇷 French (fr)", "fr")
-    ]
+    # Import the LANGUAGES dictionary from the helper
+    from backend.functions.helpers.get_lang_display import LANGUAGES
     
-    for lang_name, lang_code in common_languages:
+    # Create buttons for all languages in the LANGUAGES dictionary
+    for lang_code, (flag_emoji, language_name) in LANGUAGES.items():
         is_enabled = lang_code in chat.chat_settings.allowed_languages
         status = "✅" if is_enabled else "❌"
         builder.button(
-            text=f"{status} {lang_name}", 
+            text=f"{status} {flag_emoji} {language_name} ({lang_code})", 
             callback_data=f"lang_toggle_{lang_code}"
         )
     
     builder.button(text="Back to Main Menu", callback_data="settings_back_main")
-    builder.adjust(1)  # One button per row
+    builder.adjust(3)  # One button per row
     
     await callback.message.edit_text(
         "Select languages to allow in this chat:\n\n"
@@ -495,7 +488,6 @@ async def cb_allowed_languages(callback: types.CallbackQuery, state: FSMContext)
         "according to your moderation rules.",
         reply_markup=builder.as_markup()
     )
-    
     await state.set_state(SettingsStates.allowed_languages)
 
 @settings_router.callback_query(F.data.startswith("lang_toggle_"), SettingsStates.allowed_languages)
@@ -1285,7 +1277,7 @@ async def process_min_messages(message: types.Message, state: FSMContext):
     
     try:
         min_messages = int(message.text)
-        if min_messages >= 0:
+        if min_messages >= 1 and min_messages <= 20:  # Reasonable limit for min messages
             chat = await database.get_chat(chat_id)
             
             chat.chat_settings.new_members_min_analyzed_messages = min_messages
@@ -1299,8 +1291,8 @@ async def process_min_messages(message: types.Message, state: FSMContext):
             builder.button(text="Back to Main Menu", callback_data="settings_back_main")
             await message.reply("What would you like to do next?", reply_markup=builder.as_markup())
         else:
-            await message.reply("Value must be a non-negative integer. Please try again.")
-            logger.warning(f"Invalid min messages: {min_messages} - negative value")
+            await message.reply("Value must be an integer between 1 and 20. Please try again.")
+            logger.warning(f"Invalid min messages: {min_messages}")
     except ValueError:
         await message.reply("Please enter a valid integer.")
         logger.warning(f"Invalid min messages: {message.text} - not an integer")
