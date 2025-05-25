@@ -109,11 +109,12 @@ async def format_top_report(top_data: Dict[str, Any]) -> str:
     report += "\n"
     
     # Most languages
-    report += "🌐 <b>Most Languages Used:</b>\n"
-    for i, (chat_id, lang_count, users) in enumerate(top_data.get("most_languages", []), 1):
-        chat_name = chat_names.get(str(chat_id), f"Chat {chat_id}")
-        report += f"{i}. {chat_name}: {lang_count} languages ({users} users)\n"
-    report += "\n"
+    if not language_filter:
+        report += "🌐 <b>Most Languages Used:</b>\n"
+        for i, (chat_id, lang_count, users) in enumerate(top_data.get("most_languages", []), 1):
+            chat_name = chat_names.get(str(chat_id), f"Chat {chat_id}")
+            report += f"{i}. {chat_name}: {lang_count} languages ({users} users)\n"
+        report += "\n"
     
     # Earliest activity
     report += "🕰️ <b>Earliest Activity:</b>\n"
