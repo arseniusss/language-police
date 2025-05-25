@@ -8,6 +8,7 @@ from .ranking import ranking_router
 from .settings import settings_router
 from .admin import admin_router
 from .user_data import user_data_router
+from .analyze_language import analyze_language_router
 
 main_command_router = Router(name='main_commands_router')
 main_command_router.include_router(start_router)
@@ -18,6 +19,7 @@ main_command_router.include_router(ranking_router)
 main_command_router.include_router(settings_router)
 main_command_router.include_router(admin_router)
 main_command_router.include_router(user_data_router)
+main_command_router.include_router(analyze_language_router)
 
 # should be the last one to trigger after all commands
 main_command_router.include_router(message_router)
