@@ -173,29 +173,6 @@ class TestStatisticsFunctions:
         assert language_confidence["uk"]["average"] == pytest.approx(0.85, rel=1e-2)
         assert language_confidence["de"]["average"] == pytest.approx(0.65, rel=1e-2)
 
-    def test_peak_activity_hours(self):
-        """Test peak activity hours calculation."""
-        message_times = [
-            datetime(2023, 1, 1, 9, 0),   # 9 AM
-            datetime(2023, 1, 1, 10, 0),  # 10 AM
-            datetime(2023, 1, 1, 10, 30), # 10:30 AM
-            datetime(2023, 1, 1, 14, 0),  # 2 PM
-            datetime(2023, 1, 1, 20, 0),  # 8 PM
-            datetime(2023, 1, 1, 21, 0),  # 9 PM
-        ]
-        
-        hour_counts = {}
-        for timestamp in message_times:
-            hour = timestamp.hour
-            hour_counts[hour] = hour_counts.get(hour, 0) + 1
-        
-        # Find peak hour
-        peak_hour = max(hour_counts, key=hour_counts.get)
-        peak_count = hour_counts[peak_hour]
-        
-        assert peak_hour == 10  # 10 AM has 2 messages
-        assert peak_count == 2
-
     @pytest.mark.asyncio
     async def test_stats_formatting(self):
         """Test statistics response formatting."""

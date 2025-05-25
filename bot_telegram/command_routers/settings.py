@@ -4,9 +4,11 @@ from aiogram import types, Router, F
 from aiogram.filters.command import Command
 from aiogram.filters.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from middlewares.database.db import database
 from middlewares.database.models import Chat, ChatSettings, ModerationRule, RuleCondition, Restriction, RestrictionType, RuleConditionType, ConditionRelationType
+from backend.functions.helpers.get_lang_display import get_language_display
 
 settings_router = Router(name='settings_router')
 logger = logging.getLogger()
@@ -20,8 +22,7 @@ class SettingsStates(StatesGroup):
     max_message_length = State()
     new_members_min_messages = State()
     new_rule_name = State()
-
-    # Moderation rules states
+    # ⚒️Moderation rules states
     moderation_rules_list = State()
     edit_rule = State()
     new_rule_message = State()
@@ -29,6 +30,7 @@ class SettingsStates(StatesGroup):
     new_rule_restriction_justification = State()
     new_rule_restriction_duration = State()
     new_rule_condition_type = State()
+    new_rule_restriction_type_selection = State()
     new_rule_condition_value = State()
     new_rule_notify_user = State()
     new_rule_add_another_condition = State()
@@ -279,63 +281,8 @@ async def chat_settings_command(message: types.Message, state: FSMContext):
         # If in private chat, show a list of chats the user is admin in
         await show_admin_chats(message, state)
         return
-        
-    # If in a group chat, check admin status
-    is_admin = await is_user_admin(message.chat.id, message.from_user.id)
-    
-    if not is_admin:
-        await message.reply("You need to be an admin to change chat settings. Use /add_admins to sync administrators.")
-        logger.warning(f"User {message.from_user.id} attempted to access settings without admin rights in chat {message.chat.id}")
-        return
-    
-    # Get chat info
-    chat = await database.get_chat(message.chat.id)
-    if not chat:
-        await message.reply("Chat not found in database. Please try again later.")
-        logger.warning(f"Chat {message.chat.id} not found in database")
-        return
-    
-    # Store chat ID and inform user
-    await state.update_data(chat_id=message.chat.id)
-    await message.reply("I've sent you the settings menu in a private message.")
-    
-    try:
-        # Send settings menu directly to user's private chat
-        builder = InlineKeyboardBuilder()
-        builder.button(text="Allowed Languages", callback_data="settings_allowed_languages")
-        builder.button(text="Analysis Frequency", callback_data="settings_analysis_frequency")
-        builder.button(text="Message Length Limits", callback_data="settings_message_length")
-        builder.button(text="Minimum Messages for New Users", callback_data="settings_min_messages")
-        builder.button(text="Moderation Rules", callback_data="settings_moderation_rules")
-        builder.button(text="Close", callback_data="settings_close")
-        builder.adjust(1)  # One button per row
-        
-        # Send the menu to user's private chat
-        await message.bot.send_message(
-            message.from_user.id,
-            f"Chat Settings for {chat.last_known_name}\n\n"
-            f"Current settings:\n"
-            f"• Allowed languages: {', '.join(chat.chat_settings.allowed_languages)}\n"
-            f"• Analysis frequency: {chat.chat_settings.analysis_frequency}\n"
-            f"• Min message length: {chat.chat_settings.min_message_length_for_analysis}\n"
-            f"• Max message length: {chat.chat_settings.max_message_length_for_analysis}\n"
-            f"• New members min messages: {chat.chat_settings.new_members_min_analyzed_messages}\n"
-            f"• Moderation rules: {len(chat.chat_settings.moderation_rules)}\n\n"
-            f"Select a setting to modify:",
-            reply_markup=builder.as_markup()
-        )
-        
-        # Set state for the private chat
-        await state.set_state(SettingsStates.main_menu)
-        logger.info(f"Sent settings menu to private chat for user {message.from_user.id}")
-        
-    except Exception as e:
-        # Handle the case where the bot cannot message the user
-        await message.reply(
-            "I couldn't send you a private message. Please start a conversation with me first by clicking "
-            f"this link: https://t.me/{(await message.bot.get_me()).username}"
-        )
-        logger.error(f"Failed to send settings menu to user {message.from_user.id}: {str(e)}")
+
+    await message.reply("This command can only be used in provate chats. Please go to the private menu and choose the relevant chat from there.")    
 
 async def show_admin_chats(message: types.Message, state: FSMContext):
     """Show a list of chats where the user is an admin"""
@@ -415,37 +362,39 @@ async def show_settings_menu(message: types.Message, state: FSMContext, chat: Ch
     
     # Store chat in state
     await state.update_data(chat_id=chat.chat_id)
-    
+    languages = chat.chat_settings.allowed_languages or []
+    allowed_languages_display = ",".join([get_language_display(lang) for lang in languages])
+
     # Create main menu keyboard
     builder = InlineKeyboardBuilder()
-    builder.button(text="Allowed Languages", callback_data="settings_allowed_languages")
-    builder.button(text="Analysis Frequency", callback_data="settings_analysis_frequency")
-    builder.button(text="Message Length Limits", callback_data="settings_message_length")
-    builder.button(text="Minimum Messages for New Users", callback_data="settings_min_messages")
-    builder.button(text="Moderation Rules", callback_data="settings_moderation_rules")
-    builder.button(text="Close", callback_data="settings_close")
+    builder.button(text="🌐Allowed Languages", callback_data="settings_allowed_languages")
+    builder.button(text="➗Analysis Frequency", callback_data="settings_analysis_frequency")
+    builder.button(text="📏Message Length Limits", callback_data="settings_message_length")
+    builder.button(text="🆕Minimum Messages for New Users", callback_data="settings_min_messages")
+    builder.button(text="⚒️Moderation Rules", callback_data="settings_moderation_rules")
+    builder.button(text="🔐Close", callback_data="settings_close")
     builder.adjust(1)  # One button per row
     
     await message.edit_text(
         f"Chat Settings for {chat.last_known_name}\n\n"
         f"Current settings:\n"
-        f"• Allowed languages: {', '.join(chat.chat_settings.allowed_languages)}\n"
-        f"• Analysis frequency: {chat.chat_settings.analysis_frequency}\n"
-        f"• Min message length: {chat.chat_settings.min_message_length_for_analysis}\n"
-        f"• Max message length: {chat.chat_settings.max_message_length_for_analysis}\n"
-        f"• New members min messages: {chat.chat_settings.new_members_min_analyzed_messages}\n"
-        f"• Moderation rules: {len(chat.chat_settings.moderation_rules)}\n\n"
+        f"• 🌐 Allowed languages: {allowed_languages_display}\n"
+        f"• ➗Analysis frequency: {chat.chat_settings.analysis_frequency}\n"
+        f"• 📏Min message length: {chat.chat_settings.min_message_length_for_analysis}\n"
+        f"• 📏Max message length: {chat.chat_settings.max_message_length_for_analysis}\n"
+        f"• 🆕New members min messages: {chat.chat_settings.new_members_min_analyzed_messages}\n"
+        f"• ⚒️Moderation rules: {len(chat.chat_settings.moderation_rules)}\n\n"
         f"Select a setting to modify:",
         reply_markup=builder.as_markup()
     ) if hasattr(message, 'edit_text') else await message.reply(
         f"Chat Settings for {chat.last_known_name}\n\n"
         f"Current settings:\n"
-        f"• Allowed languages: {', '.join(chat.chat_settings.allowed_languages)}\n"
-        f"• Analysis frequency: {chat.chat_settings.analysis_frequency}\n"
-        f"• Min message length: {chat.chat_settings.min_message_length_for_analysis}\n"
-        f"• Max message length: {chat.chat_settings.max_message_length_for_analysis}\n"
-        f"• New members min messages: {chat.chat_settings.new_members_min_analyzed_messages}\n"
-        f"• Moderation rules: {len(chat.chat_settings.moderation_rules)}\n\n"
+        f"• 🌐Allowed languages: {allowed_languages_display}\n"
+        f"• ➗Analysis frequency: {chat.chat_settings.analysis_frequency}\n"
+        f"• 📏Min message length: {chat.chat_settings.min_message_length_for_analysis}\n"
+        f"• 📏Max message length: {chat.chat_settings.max_message_length_for_analysis}\n"
+        f"• 🆕New members min messages: {chat.chat_settings.new_members_min_analyzed_messages}\n"
+        f"• ⚒️Moderation rules: {len(chat.chat_settings.moderation_rules)}\n\n"
         f"Select a setting to modify:",
         reply_markup=builder.as_markup()
     )
@@ -479,7 +428,7 @@ async def cb_allowed_languages(callback: types.CallbackQuery, state: FSMContext)
             callback_data=f"lang_toggle_{lang_code}"
         )
     
-    builder.button(text="Back to Main Menu", callback_data="settings_back_main")
+    builder.button(text="↩️Back to Main Menu", callback_data="settings_back_main")
     builder.adjust(3)  # One button per row
     
     await callback.message.edit_text(
@@ -548,10 +497,10 @@ async def cb_moderation_rules(callback: types.CallbackQuery, state: FSMContext):
             )
     
     builder.button(text="➕ Add New Rule", callback_data="add_new_rule")
-    builder.button(text="Back to Main Menu", callback_data="settings_back_main")
+    builder.button(text="↩️Back to Main Menu", callback_data="settings_back_main")
     builder.adjust(1)  # One button per row
     
-    message_text = "Moderation Rules:\n\n"
+    message_text = "⚒️Moderation Rules:\n\n"
     if not chat.chat_settings.moderation_rules:
         message_text += "No rules configured yet. Add a rule to automatically warn or restrict users based on specific conditions."
     else:
@@ -761,21 +710,179 @@ async def cb_condition_type(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(current_condition_type=condition_type, current_condition_fields={}, current_field_index=0)
     logger.info(f"User {callback.from_user.id} selected condition type: {condition_type}")
     
-    # Get description for this condition type
+    # Check if this condition type requires restriction type selection
+    if condition_type in [RuleConditionType.PREVIOUS_RESTRICTION_TYPE_COUNT.value, 
+                         RuleConditionType.PREVIOUS_RESTRICTION_TYPE_TIME_LENGTH.value]:
+        # Show restriction type selection first
+        await show_restriction_type_selection(callback.message, state, condition_type)
+    else:
+        # Get description for this condition type
+        description = ConditionInputHelper.get_condition_prompt(condition_type)
+        
+        # Get first field prompt
+        field_name, field_prompt = ConditionInputHelper.get_field_prompt(condition_type, 0)
+        
+        if field_name:
+            # This is a multi-field condition
+            message_text = f"{description}\n\n{field_prompt}"
+            await callback.message.edit_text(message_text)
+            await state.set_state(SettingsStates.new_rule_condition_field)
+        else:
+            # Fall back to the old behavior for unknown condition types
+            await callback.message.edit_text(description)
+            await state.set_state(SettingsStates.new_rule_condition_value)
+
+async def show_restriction_type_selection(message: types.Message, state: FSMContext, condition_type: str):
+    """Show toggleable buttons for restriction type selection"""
+    builder = InlineKeyboardBuilder()
+    
+    # Add "Any" button (special case)
+    builder.button(text="✅ Any", callback_data="restriction_toggle_any")
+    
+    # Add buttons for each restriction type
+    for restriction_type in RestrictionType:
+        builder.button(
+            text=f"⬜ {restriction_type.value.capitalize()}", 
+            callback_data=f"restriction_toggle_{restriction_type.value}"
+        )
+    
+    builder.button(text="Continue", callback_data="restriction_selection_done")
+    builder.adjust(2)  # Two buttons per row
+    
     description = ConditionInputHelper.get_condition_prompt(condition_type)
     
-    # Get first field prompt
+    await message.edit_text(
+        f"{description}\n\n"
+        "Select which restriction types to check for:\n"
+        "• ✅ = Selected\n"
+        "• ⬜ = Not selected\n\n"
+        "Click 'Continue' when done.",
+        reply_markup=builder.as_markup()
+    )
+    
+    # Initialize selected restriction types with "any" as default
+    await state.update_data(selected_restriction_types=["any"])
+    await state.set_state(SettingsStates.new_rule_restriction_type_selection)
+
+@settings_router.callback_query(F.data.startswith("restriction_toggle_"), SettingsStates.new_rule_restriction_type_selection)
+async def cb_toggle_restriction_type(callback: types.CallbackQuery, state: FSMContext):
+    """Handle toggling of restriction types"""
+    data = await state.get_data()
+    selected_types = data.get('selected_restriction_types', [])
+    restriction_type = callback.data.split("_", 2)[2]  # Get the restriction type after "restriction_toggle_"
+    
+    if restriction_type == "any":
+        # If "any" is toggled, clear all other selections
+        if "any" in selected_types:
+            selected_types = []
+        else:
+            selected_types = ["any"]
+    else:
+        # If a specific type is toggled, remove "any" first
+        if "any" in selected_types:
+            selected_types.remove("any")
+        
+        # Toggle the specific type
+        if restriction_type in selected_types:
+            selected_types.remove(restriction_type)
+        else:
+            selected_types.append(restriction_type)
+    
+    # If no types selected, default back to "any"
+    if not selected_types:
+        selected_types = ["any"]
+    
+    await state.update_data(selected_restriction_types=selected_types)
+    
+    # Update the keyboard to reflect current selections
+    builder = InlineKeyboardBuilder()
+    
+    # Add "Any" button
+    any_text = "✅ Any" if "any" in selected_types else "⬜ Any"
+    builder.button(text=any_text, callback_data="restriction_toggle_any")
+    
+    # Add buttons for each restriction type
+    for rt in RestrictionType:
+        checkbox = "✅" if rt.value in selected_types else "⬜"
+        builder.button(
+            text=f"{checkbox} {rt.value.capitalize()}", 
+            callback_data=f"restriction_toggle_{rt.value}"
+        )
+    
+    builder.button(text="Continue", callback_data="restriction_selection_done")
+    builder.adjust(2)
+    
+    condition_type = data['current_condition_type']
+    description = ConditionInputHelper.get_condition_prompt(condition_type)
+    
+    await callback.message.edit_text(
+        f"{description}\n\n"
+        "Select which restriction types to check for:\n"
+        "• ✅ = Selected\n"
+        "• ⬜ = Not selected\n\n"
+        "Click 'Continue' when done.",
+        reply_markup=builder.as_markup()
+    )
+
+@settings_router.callback_query(F.data == "restriction_selection_done", SettingsStates.new_rule_restriction_type_selection)
+async def cb_restriction_selection_done(callback: types.CallbackQuery, state: FSMContext):
+    """Handle completion of restriction type selection"""
+    data = await state.get_data()
+    selected_types = data.get('selected_restriction_types', ["any"])
+    condition_type = data['current_condition_type']
+    
+    # Store the selected restriction types in the condition fields
+    current_fields = data.get('current_condition_fields', {})
+    current_fields['restriction_type'] = selected_types
+    await state.update_data(current_condition_fields=current_fields)
+    
+    # Get the next field to ask for
     field_name, field_prompt = ConditionInputHelper.get_field_prompt(condition_type, 0)
     
-    if field_name:
-        # This is a multi-field condition
-        message_text = f"{description}\n\n{field_prompt}"
-        await callback.message.edit_text(message_text)
+    if field_name and field_name != "restriction_type":
+        # Ask for the next field
+        await callback.message.edit_text(field_prompt)
         await state.set_state(SettingsStates.new_rule_condition_field)
     else:
-        # Fall back to the old behavior for unknown condition types
-        await callback.message.edit_text(description)
-        await state.set_state(SettingsStates.new_rule_condition_value)
+        # If restriction_type was the only field or we need to find the next non-restriction_type field
+        next_field_index = 0
+        total_fields = ConditionInputHelper.get_fields_count(condition_type)
+        
+        # Find the first field that isn't restriction_type
+        while next_field_index < total_fields:
+            next_field_name, next_field_prompt = ConditionInputHelper.get_field_prompt(condition_type, next_field_index)
+            if next_field_name != "restriction_type":
+                await callback.message.edit_text(next_field_prompt)
+                await state.update_data(current_field_index=next_field_index)
+                await state.set_state(SettingsStates.new_rule_condition_field)
+                return
+            next_field_index += 1
+        
+        # If we get here, restriction_type was the only field
+        # Create the condition directly
+        condition = {
+            "type": condition_type,
+            "values": current_fields,
+            "this_chat_only": True
+        }
+        
+        # Add condition to list
+        rule_conditions = data.get('rule_conditions', [])
+        rule_conditions.append(condition)
+        await state.update_data(rule_conditions=rule_conditions)
+        
+        # Ask if user wants to add another condition
+        builder = InlineKeyboardBuilder()
+        builder.button(text="Yes, add another condition", callback_data="add_another_condition")
+        builder.button(text="No, continue", callback_data="done_with_conditions")
+        builder.adjust(1)
+        
+        await callback.message.edit_text(
+            f"Condition added! Do you want to add another condition?",
+            reply_markup=builder.as_markup()
+        )
+        
+        await state.set_state(SettingsStates.new_rule_add_another_condition)
 
 @settings_router.message(SettingsStates.new_rule_condition_field)
 async def process_condition_field(message: types.Message, state: FSMContext):
@@ -1078,8 +1185,12 @@ async def cb_analysis_frequency(callback: types.CallbackQuery, state: FSMContext
         "Enter the analysis frequency (0.05-1.0):\n\n"
         "This determines what fraction of messages will be analyzed. "
         "For example, 0.1 means 10% of messages will be analyzed, while "
-        "1.0 means every message will be analyzed."
+        "1.0 means every message will be analyzed." \
+        "The setting 'new members min messages' will override this for new members.",
     )
+    builder = InlineKeyboardBuilder()
+    builder.button(text="↩️Back to Main Menu", callback_data="settings_back_main")
+    await callback.message.edit_reply_markup(reply_markup=builder.as_markup())
     
     await state.set_state(SettingsStates.analysis_frequency)
 
@@ -1108,7 +1219,7 @@ async def process_analysis_frequency(message: types.Message, state: FSMContext):
             
             # Return to main menu
             builder = InlineKeyboardBuilder()
-            builder.button(text="Back to Main Menu", callback_data="settings_back_main")
+            builder.button(text="↩️Back to Main Menu", callback_data="settings_back_main")
             await message.reply("What would you like to do next?", reply_markup=builder.as_markup())
         else:
             await message.reply("Value must be between 0.05 and 1.0. Please try again.")
@@ -1133,11 +1244,11 @@ async def cb_message_length(callback: types.CallbackQuery, state: FSMContext):
     builder = InlineKeyboardBuilder()
     builder.button(text="Set Minimum Length", callback_data="set_min_length")
     builder.button(text="Set Maximum Length", callback_data="set_max_length")
-    builder.button(text="Back to Main Menu", callback_data="settings_back_main")
+    builder.button(text="↩️Back to Main Menu", callback_data="settings_back_main")
     builder.adjust(1)
     
     await callback.message.edit_text(
-        f"Current message length limits:\n"
+        f"📏Current message length limits:\n"
         f"• Minimum: {chat.chat_settings.min_message_length_for_analysis} characters\n"
         f"• Maximum: {chat.chat_settings.max_message_length_for_analysis} characters\n\n"
         f"Messages outside these limits will not be analyzed.",
@@ -1185,7 +1296,7 @@ async def process_min_length(message: types.Message, state: FSMContext):
             
             # Return to main menu
             builder = InlineKeyboardBuilder()
-            builder.button(text="Back to Main Menu", callback_data="settings_back_main")
+            builder.button(text="↩️Back to Main Menu", callback_data="settings_back_main")
             await message.reply("What would you like to do next?", reply_markup=builder.as_markup())
         else:
             await message.reply("Value must be a non-negative integer. Please try again.")
@@ -1204,6 +1315,9 @@ async def cb_set_max_length(callback: types.CallbackQuery, state: FSMContext):
         return
     
     logger.info(f"User {callback.from_user.id} setting max message length for chat {chat_id}")
+    builder = InlineKeyboardBuilder()
+    builder.button(text="↩️Back to Main Menu", callback_data="settings_back_main")
+    await callback.message.edit_reply_markup(reply_markup=builder.as_markup())
     await callback.message.edit_text(
         "Enter the maximum message length for analysis (in characters):"
     )
@@ -1235,7 +1349,7 @@ async def process_max_length(message: types.Message, state: FSMContext):
             
             # Return to main menu
             builder = InlineKeyboardBuilder()
-            builder.button(text="Back to Main Menu", callback_data="settings_back_main")
+            builder.button(text="↩️Back to Main Menu", callback_data="settings_back_main")
             await message.reply("What would you like to do next?", reply_markup=builder.as_markup())
         else:
             await message.reply("Value must be a positive integer. Please try again.")
@@ -1255,11 +1369,17 @@ async def cb_min_messages(callback: types.CallbackQuery, state: FSMContext):
         return
     
     logger.info(f"User {callback.from_user.id} accessing min messages settings for chat {chat_id}")
+    
+    builder = InlineKeyboardBuilder()
+    builder.button(text="↩️Back to Main Menu", callback_data="settings_back_main")
+    await callback.message.edit_reply_markup(reply_markup=builder.as_markup())
+
     await callback.message.edit_text(
-        "Enter the minimum number of analyzed messages required for new members:\n\n"
-        "This sets how many messages a new user must send before their language "
-        "statistics are calculated."
+        "Enter the minimum number of analyzed messages for new members:\n\n"
+        "This setting guarantees that despite the chat's analysis frequency,"
+        "new members will have at least this many messages analyzed.",
     )
+    await callback.message.edit_reply_markup(reply_markup=builder.as_markup())
     
     await state.set_state(SettingsStates.new_members_min_messages)
 
@@ -1288,7 +1408,7 @@ async def process_min_messages(message: types.Message, state: FSMContext):
             
             # Return to main menu
             builder = InlineKeyboardBuilder()
-            builder.button(text="Back to Main Menu", callback_data="settings_back_main")
+            builder.button(text="↩️Back to Main Menu", callback_data="settings_back_main")
             await message.reply("What would you like to do next?", reply_markup=builder.as_markup())
         else:
             await message.reply("Value must be an integer between 1 and 20. Please try again.")
@@ -1426,6 +1546,7 @@ async def cb_delete_rule(callback: types.CallbackQuery, state: FSMContext):
 @settings_router.callback_query(F.data == "settings_back_main")
 async def cb_back_to_main(callback: types.CallbackQuery, state: FSMContext):
     # Check admin permissions again
+    
     chat_id = (await state.get_data())['chat_id']
     if not await is_user_admin(chat_id, callback.from_user.id):
         await callback.answer("You need to be an admin to change chat settings.", show_alert=True)
@@ -1435,24 +1556,27 @@ async def cb_back_to_main(callback: types.CallbackQuery, state: FSMContext):
     logger.info(f"User {callback.from_user.id} returning to main menu for chat {chat_id}")
     chat = await database.get_chat(chat_id)
     
+    languages = chat.chat_settings.allowed_languages or []
+    allowed_languages_display = ",".join([get_language_display(lang) for lang in languages])
+
     builder = InlineKeyboardBuilder()
-    builder.button(text="Allowed Languages", callback_data="settings_allowed_languages")
-    builder.button(text="Analysis Frequency", callback_data="settings_analysis_frequency")
-    builder.button(text="Message Length Limits", callback_data="settings_message_length")
-    builder.button(text="Minimum Messages for New Users", callback_data="settings_min_messages")
-    builder.button(text="Moderation Rules", callback_data="settings_moderation_rules")
-    builder.button(text="Close", callback_data="settings_close")
+    builder.button(text="🌐Allowed Languages", callback_data="settings_allowed_languages")
+    builder.button(text="➗Analysis Frequency", callback_data="settings_analysis_frequency")
+    builder.button(text="📏Message Length Limits", callback_data="settings_message_length")
+    builder.button(text="🆕Minimum Messages for New Users", callback_data="settings_min_messages")
+    builder.button(text="⚒️Moderation Rules", callback_data="settings_moderation_rules")
+    builder.button(text="🔐Close", callback_data="settings_close")
     builder.adjust(1)  # One button per row
     
     await callback.message.edit_text(
         f"Chat Settings for {chat.last_known_name}\n\n"
         f"Current settings:\n"
-        f"• Allowed languages: {', '.join(chat.chat_settings.allowed_languages)}\n"
+        f"🌐 Allowed languages: {allowed_languages_display}\n"
         f"• Analysis frequency: {chat.chat_settings.analysis_frequency}\n"
-        f"• Min message length: {chat.chat_settings.min_message_length_for_analysis}\n"
-        f"• Max message length: {chat.chat_settings.max_message_length_for_analysis}\n"
-        f"• New members min messages: {chat.chat_settings.new_members_min_analyzed_messages}\n"
-        f"• Moderation rules: {len(chat.chat_settings.moderation_rules)}\n\n"
+        f"• 📏Min message length: {chat.chat_settings.min_message_length_for_analysis}\n"
+        f"• 📏Max message length: {chat.chat_settings.max_message_length_for_analysis}\n"
+        f"• 🆕New members min messages: {chat.chat_settings.new_members_min_analyzed_messages}\n"
+        f"• ⚒️Moderation rules: {len(chat.chat_settings.moderation_rules)}\n\n"
         f"Select a setting to modify:",
         reply_markup=builder.as_markup()
     )

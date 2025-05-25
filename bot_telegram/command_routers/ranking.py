@@ -19,7 +19,6 @@ async def my_chat_ranking(message: types.Message):
         "message_type": GeneralBackendQueueMessageType.MY_CHAT_RANKING_COMMAND_TG,
         "user_id": message.from_user.id,
         "chat_id": message.chat.id,
-        "message_id": message.message_id,
     }
 
     guid = str(uuid.uuid4())
@@ -35,7 +34,6 @@ async def my_global_ranking(message: types.Message):
         "message_type": GeneralBackendQueueMessageType.MY_GLOBAL_RANKING_COMMAND_TG,
         "user_id": message.from_user.id,
         "chat_id": message.chat.id,
-        "message_id": message.message_id,
     }
 
     guid = str(uuid.uuid4())
