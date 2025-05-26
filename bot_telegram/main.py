@@ -19,7 +19,7 @@ async def set_bot_commands():
     commands = [
         BotCommand(command="start", description="Start the bot"),
         BotCommand(command="help", description="See the list of commands"),
-        BotCommand(command="analyze", description="Analyze the language of a message (reply or provide text)"),
+        BotCommand(command="analyze_language", description="Analyze the language of a message (reply or provide text)"),
         BotCommand(command="chat_stats", description="Get chat language analysis stats"),
         BotCommand(command="global_stats", description="Get global language statistics of all chats"),
         BotCommand(command="my_chat_stats", description="Get your contribution to the chat stats"),

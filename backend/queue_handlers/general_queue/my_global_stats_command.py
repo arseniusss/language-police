@@ -14,10 +14,10 @@ async def format_global_stats_report(stats_data):
     """Format the global stats data into a readable message using HTML"""
     report = "<b>🌎 Your Global Statistics 🌎</b>\n\n"
     
-    report += f"💬 Total Chats: <b>{stats_data['total_chats']}</b>\n"
-    report += f"📝 Total Messages: <b>{stats_data['total_messages']}</b>\n"
-    report += f"📏 Total Message Length: <b>{stats_data['total_message_length']}</b> characters\n"
-    report += f"📊 Average Message Length: <b>{stats_data['avg_length']:.2f}</b> characters\n\n"
+    report += f"💬 <b>Total Chats: {stats_data['total_chats']}</b>\n"
+    report += f"📝 <b>Total Messages: {stats_data['total_messages']}</b>\n"
+    report += f"📏 <b>Total Message Length: {stats_data['total_message_length']}</b> characters\n"
+    report += f"📊 <b>Average Message Length: {stats_data['avg_length']:.2f}</b> characters\n\n"
     
     if 'message_count_by_language' in stats_data and stats_data['message_count_by_language']:
         report += "<b>🌐 Messages by Language:</b>\n"
@@ -25,20 +25,20 @@ async def format_global_stats_report(stats_data):
                                  key=lambda x: x[1], reverse=True):
             lang_display = get_language_display(lang)
             percentage = (count / stats_data['total_messages']) * 100
-            report += f"{lang_display}: {count} messages ({percentage:.1f}%)\n"
+            report += f"{lang_display}: <b>{count}</b> messages ({percentage:.2f}%)\n"
     
     report += "\n<b>📊 Messages by Chat:</b>\n"
     if stats_data.get('message_count_by_chat'):
         chat_names = stats_data.get('chat_names', {})
         
         for chat_id, count in sorted(stats_data['message_count_by_chat'].items(), 
-                                  key=lambda x: x[1], reverse=True)[:5]:  # Top 5 chats
+                                  key=lambda x: x[1], reverse=True)[:10]:  # Top 5 chats
             percentage = (count / stats_data['total_messages']) * 100
             chat_display = chat_names.get(chat_id, f"Chat {chat_id}")
-            report += f"• {chat_display}: {count} messages ({percentage:.1f}%)\n"
+            report += f"• {chat_display}: {count} messages ({percentage:.2f}%)\n"
         
-        if len(stats_data['message_count_by_chat']) > 5:
-            report += f"... and {len(stats_data['message_count_by_chat']) - 5} more chats\n"
+        if len(stats_data['message_count_by_chat']) > 10:
+            report += f"... and {len(stats_data['message_count_by_chat']) - 10} more chats\n"
     
     return report
 

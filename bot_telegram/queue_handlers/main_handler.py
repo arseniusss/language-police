@@ -20,17 +20,11 @@ async def handle_queue_message(bot: Bot, message: IncomingMessage):
         logger.info(f"Received message: {message_data}")
         message_type = message_data.get("message_type", "Unknown")
         
-        if message_type == TelegramQueueMessageType.STATS_COMMAND_ANSWER:
-            logger.info("Handling STATS_COMMAND_TG message")
-            chat_id = message_data.get("chat_id", "")
-            text = message_data.get("text", "")
-            await bot.send_message(chat_id, text)
-        
-        elif message_type == TelegramQueueMessageType.MY_CHAT_STATS_COMMAND_ANSWER:
+        if message_type == TelegramQueueMessageType.MY_CHAT_STATS_COMMAND_ANSWER:
             logger.info("Handling MY_CHAT_STATS_COMMAND_TG message")
             chat_id = message_data.get("chat_id", "")
             stats = message_data.get("stats", "")
-            await bot.send_message(chat_id, stats)
+            await bot.send_message(chat_id, stats, parse_mode="HTML", disable_web_page_preview=True)
 
         elif message_type == TelegramQueueMessageType.MY_GLOBAL_STATS_COMMAND_ANSWER:
             logger.info("Handling MY_GLOBAL_STATS_COMMAND_ANSWER message")

@@ -72,20 +72,13 @@ async def format_stats_report(stats_data: Dict[str, Any]) -> str:
     """Format the stats data into a readable HTML message"""
     report = "<b>🌎 Global System Statistics 🌎</b>\n\n"
     
-    total_users = stats_data["total_users"]
     users_with_messages = stats_data["users_with_messages"]
     total_chats = stats_data["total_chats"]
     total_messages = stats_data["total_messages"]
     total_length = stats_data["total_message_length"]
     total_languages = stats_data["total_unique_languages"]
     
-    report += f"👥 <b>Total Users:</b> {total_users}\n"
-    report += f"💬 <b>Users with Analyzed Messages:</b> {users_with_messages} "
-    if total_users > 0:
-        report += f"({(users_with_messages / total_users) * 100:.1f}%)\n"
-    else:
-        report += "(0.0%)\n"
-        
+    report += f"💬 <b>Users with Analyzed Messages:</b> {users_with_messages}\n"
     report += f"👥 <b>Total Chats:</b> {total_chats}\n"
     report += f"📝 <b>Total Analyzed Messages:</b> {total_messages}\n"
     report += f"📏 <b>Total Message Length:</b> {total_length} characters\n"

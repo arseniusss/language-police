@@ -86,7 +86,7 @@ class ChatSettings(BaseModel):
     sync_settings_with: Optional[int] = None
 
     moderation_rules: List[ModerationRule] = []
-    allowed_languages: Optional[List[str]] = ["ua", "en"]
+    allowed_languages: Optional[List[str]] = ["uk", "en"]
     analysis_frequency: Annotated[float, Field(strict=True,ge=0.05, le=1)] = 0.05
     new_members_min_analyzed_messages: int = 5
     chat_for_logs: Optional[int] = None

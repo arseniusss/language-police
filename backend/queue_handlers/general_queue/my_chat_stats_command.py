@@ -11,11 +11,11 @@ logger = logging.getLogger(__name__)
 
 def format_stats_report(stats_data):
     """Format the stats data into a readable message"""
-    report = "📊 *Your Chat Statistics* 📊\n\n"
+    report = "📊 <b>Your Chat Statistics</b> 📊\n\n"
     
-    report += f"📝 Total Messages: *{stats_data['total_messages']}*\n"
-    report += f"📏 Total Message Length: *{stats_data['total_message_length']}* characters\n"
-    report += f"📊 Average Message Length: *{stats_data['avg_length']:.2f}* characters\n\n"
+    report += f"📝 <b>Total Messages: {stats_data['total_messages']}</b>\n"
+    report += f"📏 <b>Total Message Length: {stats_data['total_message_length']}</b> characters\n"
+    report += f"📊 <b>Average Message Length: {stats_data['avg_length']:.2f}</b> characters\n\n"
     
     if 'message_count_by_language' in stats_data and stats_data['message_count_by_language']:
         report += "🌐 *Messages by Language:*\n"
@@ -23,7 +23,7 @@ def format_stats_report(stats_data):
                                  key=lambda x: x[1], reverse=True):
             lang_display = get_language_display(lang)
             percentage = (count / stats_data['total_messages']) * 100
-            report += f"{lang_display}: {count} messages ({percentage:.1f}%)\n"
+            report += f"{lang_display}: <b>{count}</b> messages ({percentage:.2f}%)\n"
     
     return report
 

@@ -5,7 +5,6 @@ from settings import get_settings
 from middlewares.rabbitmq.queue_manager import rabbitmq_manager
 from middlewares.rabbitmq.mq_enums import GeneralBackendQueueMessageType
 from backend.queue_handlers.general_queue.analyze_text import handle_text_to_analyze
-from backend.queue_handlers.general_queue.stats_command import handle_stats_command
 from backend.queue_handlers.general_queue.my_chat_stats_command import handle_my_chat_stats_command
 from backend.queue_handlers.general_queue.my_global_stats_command import handle_my_global_stats_command
 from backend.queue_handlers.general_queue.chat_top_command import handle_chat_top_command
@@ -30,9 +29,6 @@ async def handle_general_queue_message(message: IncomingMessage):
             case GeneralBackendQueueMessageType.TEXT_TO_ANALYZE:
                 logger.info("Handling TEXT_TO_ANALYZE message")
                 await handle_text_to_analyze(message_data)
-            case GeneralBackendQueueMessageType.STATS_COMMAND_TG:
-                logger.info("Handling STATS_COMMAND_TG message")
-                await handle_stats_command(message_data)
             case GeneralBackendQueueMessageType.MY_CHAT_STATS_COMMAND_TG:
                 logger.info("Handling MY_CHAT_STATS_COMMAND_TG message")
                 await handle_my_chat_stats_command(message_data)

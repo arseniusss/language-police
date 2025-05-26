@@ -84,7 +84,7 @@ async def add_admins_command(message: types.Message):
         
         # Prepare admin list for display
         admin_text = "\n".join([
-            f"• {admin.user.full_name} (@{admin.user.username or 'No username'})"
+            f"• <a href='tg://user?id={admin.user.id}'>{admin.user.full_name}</a>"
             for admin in chat_admins
         ])
         
@@ -92,7 +92,8 @@ async def add_admins_command(message: types.Message):
         await status_msg.edit_text(
             f"✅ Successfully synced {len(chat_admins)} administrators!\n\n"
             f"Admin list:\n{admin_text}\n\n"
-            "These users now have access to bot administration commands."
+            "These users now have access to bot administration commands.",
+            parse_mode="HTML"
         )
         
     except Exception as e:
