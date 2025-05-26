@@ -32,6 +32,7 @@ async def set_bot_commands():
         BotCommand(command="global_chat_ranking", description="Get this chat's ranking among all chats"),
         BotCommand(command="chat_settings", description="Configure chat settings (admin only)"),
         BotCommand(command="add_admins", description="Sync chat administrators with bot (admin only)"),
+        BotCommand(command="restrictions", description="View and manage user restrictions (admin only)"),
         BotCommand(command="my_data", description="Download all your data as a .json file"),
     ]
     await bot.set_my_commands(commands)
